@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Supplier, Product
+from .models import Category, Supplier, Product, StockMovement
 from django.utils.html import format_html
 
 
@@ -19,6 +19,23 @@ class SupplierAdmin(admin.ModelAdmin):
     list_filter = ["created_at"]
     readonly_fields = ["id", "created_at", "updated_at"]
     ordering = ["name"]
+
+
+@admin.register(StockMovement)
+class StockMovementAdmin(admin.ModelAdmin):
+    list_display = [
+        "product",
+        "quantity",
+        "movement_type",
+        "reason",
+        "user",
+        "notes",
+        "created_at",
+    ]
+    search_fields = ["product", "movement_type", "reason", "user"]
+    list_filter = ["user", "created_at", "reason", "movement_type"]
+    readonly_fields = ["id", "created_at"]
+    ordering = ["-created_at"]
 
 
 @admin.register(Product)

@@ -1,5 +1,6 @@
 from django.db import models
 import uuid
+from django.conf import settings
 
 
 class Category(models.Model):
@@ -8,6 +9,12 @@ class Category(models.Model):
     description = models.TextField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
 
 
 class Supplier(models.Model):
@@ -18,6 +25,12 @@ class Supplier(models.Model):
     address = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Suppliers"
+
+    def __str__(self):
+        return self.name
 
 
 class Product(models.Model):
@@ -44,3 +57,45 @@ class Product(models.Model):
         ]
         ordering = ["-created_at"]
         verbose_name_plural = "Products"
+
+    def __str__(self):
+        return f"{self.name} (SKU: {self.sku})"
+
+
+class StockMovement(models.Model):
+    MOVEMENT_TYPE_CHOICES = [
+        ("IN", "Stock In"),
+        ("OUT", "Stock Out"),
+    ]
+    REASON_CHOICES = [
+        ("SALE", "Sale"),
+        ("PURCHASE", "Purchase"),
+        ("RETURN", "Return"),
+        ("MANUAL", "Manual Adjustment"),
+        ("DAMAGED", "Damaged/Lost"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1)
+    movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPE_CHOICES)
+    reason = models.CharField(max_length=100, choices=REASON_CHOICES)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="stock_movements",
+    )
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["product", "created_at"]),
+            models.Index(fields=["movement_type"]),
+        ]
+        verbose_name = "Stock Movement"
+        verbose_name_plural = "Stock Movements"
+
+    def __str__(self):
+        return f"{self.get_movement_type_display()} - {self.product.name} ({self.quantity})"
