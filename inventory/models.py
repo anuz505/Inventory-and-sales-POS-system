@@ -80,6 +80,13 @@ class StockMovement(models.Model):
     quantity = models.IntegerField(default=1)
     movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPE_CHOICES)
     reason = models.CharField(max_length=100, choices=REASON_CHOICES)
+    sales = models.ForeignKey(
+        "sales.Sales",
+        null=True,
+        on_delete=models.SET_NULL,
+        blank=True,
+        related_name="stock_movement",
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -98,4 +105,5 @@ class StockMovement(models.Model):
         verbose_name_plural = "Stock Movements"
 
     def __str__(self):
-        return f"{self.get_movement_type_display()} - {self.product.name} ({self.quantity})"
+        sale_ref = f" - Sale #{self.sales.id}" if self.sales else ""
+        return f"{self.get_movement_type_display()} - {self.product.name} ({self.quantity}){sale_ref}"
