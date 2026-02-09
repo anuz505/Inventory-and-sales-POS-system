@@ -29,11 +29,12 @@ class StockMovementAdmin(admin.ModelAdmin):
         "movement_type",
         "reason",
         "user",
+        "sales",
         "notes",
         "created_at",
     ]
     search_fields = ["product", "movement_type", "reason", "user"]
-    list_filter = ["user", "created_at", "reason", "movement_type"]
+    list_filter = ["user", "created_at", "reason", "movement_type", "sales"]
     readonly_fields = ["id", "created_at"]
     ordering = ["-created_at"]
 
