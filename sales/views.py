@@ -24,6 +24,9 @@ class SalesViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def perform_update(self, serializer):
+        serializer.save(user=self.request.user)
+
     @action(detail=True, methods=["get"], url_path="download-invoice")
     def download_invoice(self, request, pk=None):
         """
