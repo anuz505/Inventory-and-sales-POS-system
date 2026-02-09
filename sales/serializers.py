@@ -82,3 +82,45 @@ class SalesSerializer(serializers.ModelSerializer):
         # new sale successfully saved
         sale.save()
         return sale
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        old_payment_status = instance.payment_status
+
+        # Update allowed fields
+        instance.payment_status = validated_data.get(
+            "payment_status", instance.payment_status
+        )
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.discount_amount = validated_data.get(
+            "discount_amount", instance.discount_amount
+        )
+        if "discount_amount" in validated_data:
+            instance.total_amount = instance.subtotal - instance.discount_amount
+
+        instance.save()
+        if instance.payment_status == "refunded" and old_payment_status != "refunded":
+            sales_items = SalesItem.objects.filter(sale=instance).select_related(
+                "product"
+            )
+
+            for sale_item in sales_items:
+                product = Product.objects.select_for_update().get(
+                    pk=sale_item.product.pk
+                )
+                quantity = sale_item.quantity
+
+                # Restore stock
+                product.stock_quantity += quantity
+                product.save(update_fields=["stock_quantity"])
+
+                # Create stock movement for refund
+                StockMovement.objects.create(
+                    product=product,
+                    quantity=quantity,
+                    movement_type="IN",
+                    reason="RETURN",
+                    notes=f"Refund for sale {instance.invoice_number}",
+                )
+
+        return instance
