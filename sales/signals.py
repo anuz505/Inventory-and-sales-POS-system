@@ -1,7 +1,8 @@
 from django.core.mail import EmailMessage
+from django.conf import settings
 from users.models import User
 from django.db.models.signals import post_save
-from .models import Sales
+from .models import Sales, SalesItem
 from django.dispatch import receiver
 from .invoice_generator import generate_invoice_pdf
 
@@ -29,7 +30,7 @@ def send_invoice_email(sender, instance, created, **kwargs):
         email = EmailMessage(
             subject=subject,
             body=message,
-            from_email=instance.user.email,
+            from_email=settings.DEFAULT_FROM_EMAIL,
             to=[customer_email],
         )
         email.attach(
@@ -38,3 +39,45 @@ def send_invoice_email(sender, instance, created, **kwargs):
             "application/pdf",
         )
         email.send(fail_silently=False)
+
+
+@receiver(post_save, sender=SalesItem)
+def send_low_stock_notification(sender, instance, created, **kwargs):
+    if created:
+        product = instance.product
+        threshold = product.low_stock_limit
+
+        print(
+            f"Product: {product.name}, Stock: {product.stock_quantity}, Threshold: {threshold}"
+        )
+
+        if product.stock_quantity < threshold:
+            subject = f"Low Stock Alert: {product.name}"
+            message = f"""
+WARNING: Low Stock Alert
+
+Product ID: {product.id}
+Product Name: {product.name}
+Current Stock: {product.stock_quantity}
+Low Stock Limit: {threshold}
+
+Hope you will restock soon. 😊
+            """
+
+            admin_emails = User.objects.filter(is_staff=True).values_list(
+                "email", flat=True
+            )
+
+            print(f"Admin emails: {list(admin_emails)}")
+
+            if admin_emails:
+                email = EmailMessage(
+                    subject=subject,
+                    body=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    # to=list(admin_emails),
+                    #   # Send to all admins
+                    to=["anuzb50@gmail.com"],
+                )
+                email.send(fail_silently=False)
+                print(f"Low stock email sent for {product.name}")
