@@ -6,12 +6,16 @@ from rest_framework.response import Response
 from django.http import FileResponse
 from .invoice_generator import generate_invoice_pdf
 from rest_framework.pagination import LimitOffsetPagination
+import django_filters.rest_framework as filters
+from .filters import CustomerFilters, SalesFilters
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerialzer
     pagination_class = LimitOffsetPagination
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = CustomerFilters
 
 
 class SalesItemViewSet(viewsets.ModelViewSet):
@@ -24,6 +28,8 @@ class SalesViewSet(viewsets.ModelViewSet):
     queryset = Sales.objects.all()
     serializer_class = SalesSerializer
     pagination_class = LimitOffsetPagination
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = SalesFilters
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
