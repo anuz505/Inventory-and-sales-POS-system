@@ -24,6 +24,8 @@ class SalesFilters(filters.FilterSet):
     min_total = filters.NumberFilter(field_name="total_amount", lookup_expr="gte")
     max_total = filters.NumberFilter(field_name="total_amount", lookup_expr="lte")
 
+    # Filter by SalesItem properties
+    product = filters.UUIDFilter(field_name="items__product_id", lookup_expr="exact")
     ordering = filters.OrderingFilter(
         fields=(
             ("created_at", "date"),
@@ -35,6 +37,7 @@ class SalesFilters(filters.FilterSet):
     class Meta:
         model = Sales
         fields = [
+            "product",
             "invoice_number",
             "user",
             "customer",

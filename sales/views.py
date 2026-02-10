@@ -31,6 +31,21 @@ class SalesViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = SalesFilters
 
+    def get_queryset(self):
+        """
+        Override to add distinct() when filtering by related items
+        and prefetch related data for performance
+        """
+        queryset = (
+            Sales.objects.all()
+            .prefetch_related("items__product")
+            .select_related("customer", "user")
+        )
+        # Apply distinct to avoid duplicates when filtering across relations
+        if self.request.query_params:
+            queryset = queryset.distinct()
+        return queryset
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
