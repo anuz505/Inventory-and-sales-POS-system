@@ -5,21 +5,25 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.http import FileResponse
 from .invoice_generator import generate_invoice_pdf
+from rest_framework.pagination import LimitOffsetPagination
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerialzer
+    pagination_class = LimitOffsetPagination
 
 
 class SalesItemViewSet(viewsets.ModelViewSet):
     queryset = SalesItem.objects.all()
     serializer_class = SalesItemSerializer
+    pagination_class = LimitOffsetPagination
 
 
 class SalesViewSet(viewsets.ModelViewSet):
     queryset = Sales.objects.all()
     serializer_class = SalesSerializer
+    pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

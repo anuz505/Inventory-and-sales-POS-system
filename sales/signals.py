@@ -75,9 +75,8 @@ Hope you will restock soon. 😊
                     subject=subject,
                     body=message,
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    # to=list(admin_emails),
+                    to=list(admin_emails),
                     #   # Send to all admins
-                    to=["anuzb50@gmail.com"],
                 )
                 email.send(fail_silently=False)
                 print(f"Low stock email sent for {product.name}")

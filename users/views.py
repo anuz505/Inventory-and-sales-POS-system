@@ -11,6 +11,7 @@ from .serializers import (
     LoginSerializer,
     ChangePasswordSerializer,
 )
+from rest_framework.pagination import LimitOffsetPagination
 
 
 class LoginView(APIView):
@@ -109,6 +110,7 @@ class LogoutView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
+    pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
         if self.action == "create":
