@@ -2,42 +2,20 @@ from rest_framework.views import APIView
 
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .stats import periods, get_start_date, get_inventory_stats, get_sales_stats
-from django_filters import rest_framework as filters
-from django.utils import timezone
+from .stats import get_inventory_stats, get_sales_stats
+from sales.models import Sales
+from .report_generator import generate_csv, generate_filename
+from .utils import get_startdate_from_request
+from inventory.models import StockMovement
 
 
 class DashboardView(APIView):
 
     def get(self, request, format=None):
-        period = request.query_params.get("period")
-        from_date = request.query_params.get("from_date")
-        to_date = request.query_params.get("to_date")
 
-        dashboard_metrics = {}
+        start_date, period = get_startdate_from_request(request)
         permission_classes = [AllowAny]
-
-        if period:
-            mapped_period = periods.get(period)
-            if not mapped_period:
-                mapped_period = "month"
-            start_date = get_start_date(mapped_period)
-        elif from_date:
-            # if from_date is provided, parse it as date
-            from datetime import datetime
-
-            start_date = datetime.fromisoformat(from_date)
-        else:
-            start_date = get_start_date("month")  # default this month
-
-            # start_date = get_start_date(period)
-            # dashboard_metrics[period] = {
-            #     "sales": get_sales_stats(start_date),
-            #     "inventory": get_inventory_stats(start_date),
-            # }
-
-        # by default showing this month
-
+        dashboard_metrics = {}
         dashboard_metrics = {
             period
             or "this_period": {
@@ -46,11 +24,24 @@ class DashboardView(APIView):
             }
         }
 
-        # for name, period in periods.items():
-        #     start_date = get_start_date(period)
-        #     dashboard_metrics[name] = {
-        #         "sales": get_sales_stats(start_date),
-        #         "inventory": get_inventory_stats(start_date),
-        #     }
-
         return Response(dashboard_metrics)
+
+
+class SalesReportView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, format=None):
+        start_date, _ = get_startdate_from_request(request)
+        file_name = generate_filename("sales")
+        return generate_csv(filename=file_name, model=Sales, startdate=start_date)
+
+
+class StockMovementView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, format=None):
+        start_date, _ = get_startdate_from_request(request)
+        file_name = generate_filename("stockmovement")
+        return generate_csv(
+            filename=file_name, model=StockMovement, startdate=start_date
+        )

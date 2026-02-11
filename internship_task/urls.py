@@ -25,7 +25,7 @@ urlpatterns = [
     path("api-inventory/", include("inventory.urls")),
     path("api-sales/", include("sales.urls")),
     path("api/", include("users.urls")),
-    path("api-dashboard", include("dashboard.urls")),
+    path("api-dashboard/", include("dashboard.urls")),
 ]
 
 if not settings.TESTING:

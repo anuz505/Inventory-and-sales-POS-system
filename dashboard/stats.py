@@ -6,6 +6,7 @@ periods = {
     "this_month": "month",
     "last_three_months": "3_months",
     "this_year": "year",
+    "today": "today",
 }
 from sales.models import Sales, Customer, SalesItem
 from inventory.models import Product, StockMovement
@@ -21,6 +22,8 @@ def get_start_date(period: str):
         return now.replace(
             year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0
         )
+    if period == "today":
+        return now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     elif period == "year":
         return now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -53,8 +56,8 @@ def get_sales_stats(startdate):
             total_cost_price=Sum("total_cost"), total_selling_price=Sum("total_selling")
         )
     )
-    total_profit_amount = (
-        total_profit["total_selling_price"] - total_profit["total_cost_price"]
+    total_profit_amount = (total_profit["total_selling_price"] or 0) - (
+        total_profit["total_cost_price"] or 0
     )
     top_selling_products = (
         SalesItem.objects.values("product__name")
