@@ -19,7 +19,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().prefetch_related("supplier", "category")
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]  # TODO remove this , only used for dev
     pagination_class = LimitOffsetPagination
@@ -45,7 +45,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
 
 
 class StockMovementViewSet(viewsets.ModelViewSet):
-    queryset = StockMovement.objects.all()
+    queryset = StockMovement.objects.all().prefetch_related("product", "sales", "user")
     serializer_class = StockMovementSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = [filters.DjangoFilterBackend]

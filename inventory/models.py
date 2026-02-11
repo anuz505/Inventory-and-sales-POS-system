@@ -29,8 +29,8 @@ class Supplier(models.Model):
     class Meta:
         verbose_name_plural = "Suppliers"
 
-    def __str__(self):
-        return self.name
+    # def __str__(self):
+    #     return self.name
 
 
 class Product(models.Model):
@@ -58,8 +58,8 @@ class Product(models.Model):
         ordering = ["-created_at"]
         verbose_name_plural = "Products"
 
-    def __str__(self):
-        return f"{self.name} (SKU: {self.sku})"
+    # def __str__(self):
+    #     return f"{self.name} (SKU: {self.sku})"
 
 
 class StockMovement(models.Model):
@@ -104,6 +104,6 @@ class StockMovement(models.Model):
         verbose_name = "Stock Movement"
         verbose_name_plural = "Stock Movements"
 
-    def __str__(self):
-        sale_ref = f" - Sale #{self.sales.id}" if self.sales else ""
-        return f"{self.get_movement_type_display()} - {self.product.name} ({self.quantity}){sale_ref}"
+    # def __str__(self):
+    #     sale_ref = f" - Sale #{self.sales.id}" if self.sales else ""
+    #     return f"{self.get_movement_type_display()} - {self.product.name} ({self.quantity}){sale_ref}"

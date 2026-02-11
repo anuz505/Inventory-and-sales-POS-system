@@ -65,8 +65,8 @@ class Sales(models.Model):
             models.Index(fields=["-created_at"]),
         ]
 
-    def __str__(self):
-        return f"{self.invoice_number} - {self.customer.name}"
+    # def __str__(self):
+    #     return f"{self.invoice_number} - {self.customer.name}"
 
 
 class SalesItem(models.Model):
@@ -84,5 +84,5 @@ class SalesItem(models.Model):
         verbose_name_plural = "Sales Items"
         indexes = [models.Index(fields=["sale"]), models.Index(fields=["product"])]
 
-    def __str__(self):
-        return f"{self.product.name} x {self.quantity} - {self.sale.invoice_number}"
+    # def __str__(self):
+    #     return f"{self.product.name} x {self.quantity} - {self.sale.invoice_number}"

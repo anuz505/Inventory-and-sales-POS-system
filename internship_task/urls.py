@@ -17,6 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -24,4 +25,12 @@ urlpatterns = [
     path("api-inventory/", include("inventory.urls")),
     path("api-sales/", include("sales.urls")),
     path("api/", include("users.urls")),
+    path("api-dashboard", include("dashboard.urls")),
 ]
+
+if not settings.TESTING:
+    from debug_toolbar.toolbar import debug_toolbar_urls
+
+    urlpatterns = [
+        *urlpatterns,
+    ] + debug_toolbar_urls()
