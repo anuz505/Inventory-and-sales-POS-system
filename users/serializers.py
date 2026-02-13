@@ -22,7 +22,20 @@ class UserSerailizer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, min_length=8)
+    email = serializers.EmailField(
+        required=True,
+        max_length=255,
+        error_messages={
+            "required": "Email is required.",
+            "invalid": "Please provide a valid email address.",
+        },
+    )
+    password = serializers.CharField(
+        write_only=True,
+        min_length=8,
+        style={"input_type": "password"},
+        error_messages={"min_length": "Password must be at least 8 characters long."},
+    )
 
     class Meta:
         model = User
@@ -38,6 +51,25 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        return value
+
+    def validate_password(self, value):
+        errors = []
+        if not any(char.isdigit() for char in value):
+            errors.append("Password must contain at least one number.")
+        if not any(char.isupper() for char in value):
+            errors.append("Password must contain at least one uppercase letter.")
+        if not any(char.islower() for char in value):
+            errors.append("Password must contain at least one lowercase letter.")
+        if not any(not char.isalnum() for char in value):
+            errors.append("Password must contain at least one special character.")
+        if errors:
+            raise serializers.ValidationError(errors)
+        return value
 
 
 class LoginSerializer(serializers.Serializer):
@@ -63,5 +95,5 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_old_password(self, value):
         user = self.context["request"].user
         if not user.check_password(value):
-            return serializers.ValidationError("old password is incorrect")
+            raise serializers.ValidationError("old password is incorrect")
         return value

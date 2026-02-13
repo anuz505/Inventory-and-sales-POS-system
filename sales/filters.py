@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from .models import Customer, Sales, SalesItem
+from .models import Customer, Sales
 
 
 class CustomerFilters(filters.FilterSet):

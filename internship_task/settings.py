@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "sales",
     "dashboard",
     "debug_toolbar",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -60,6 +61,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 ROOT_URLCONF = "internship_task.urls"
@@ -155,4 +158,11 @@ INTERNAL_IPS = [
     # ...
     "127.0.0.1",
     # ...
+]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
 ]

@@ -20,7 +20,6 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         user = serializer.validated_data["user"]
         refresh = RefreshToken.for_user(user)
 
@@ -63,14 +62,21 @@ class RefreshTokenView(APIView):
                     {"detail": "refresh token not provided "},
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
-            refresh = RefreshToken(refresh_token)
+            try:
+                refresh = RefreshToken(refresh_token)
+            except Exception as error:
+                return Response(
+                    {"detail": f"Invalid or expired refresh token: {str(error)}"},
+                    status=401,
+                )
+            access_token = str(refresh.access_token)
             response = Response(
                 {"detail": "successfully refreshed the access token"},
                 status=status.HTTP_200_OK,
             )
             response.set_cookie(
                 key="access_token",
-                value=str(refresh.access_token),
+                value=access_token,
                 httponly=True,
                 secure=True,
                 samesite="lax",
@@ -79,7 +85,7 @@ class RefreshTokenView(APIView):
             return response
         except Exception as error:
             return Response(
-                {"detail": "Invalid or expired refresh token"},
+                {"detail": "Invalid or expired refresh token {error}"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
