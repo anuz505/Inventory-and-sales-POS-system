@@ -38,7 +38,7 @@ class LoginView(APIView):
             httponly=True,
             secure=True,
             samesite="lax",
-            max_age=604800,  # TODO set the max age for 3600 again
+            max_age=70,  # TODO set the max age for 3600 again
         )
         response.set_cookie(
             key="refresh_token",
@@ -149,3 +149,10 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(
             {"detail": "Password changed successfully"}, status=status.HTTP_200_OK
         )
+
+
+class AuthCheckView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"authenticated": True, "user": request.user.username})

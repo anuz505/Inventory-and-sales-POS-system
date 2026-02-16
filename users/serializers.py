@@ -57,8 +57,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This email is already registered.")
         return value
 
-    def validate_password(self, value):
+    def validate_new_password(self, value):
         errors = []
+        if len(value) < 8:
+            errors.append("Password must be at least 8 characters long.")
         if not any(char.isdigit() for char in value):
             errors.append("Password must contain at least one number.")
         if not any(char.isupper() for char in value):
@@ -79,9 +81,13 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         user = authenticate(username=data["username"], password=data["password"])
         if not user:
-            raise serializers.ValidationError("invalid credentials")
+            raise serializers.ValidationError(
+                {"non_field_errors": ["Invalid username or password."]}
+            )
         if not user.is_active:
-            raise serializers.ValidationError("user account is disabled")
+            raise serializers.ValidationError(
+                {"non_field_errors": ["User account is disabled."]}
+            )
         data["user"] = user
         return data
 
