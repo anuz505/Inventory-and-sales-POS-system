@@ -155,4 +155,19 @@ class AuthCheckView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response({"authenticated": True, "user": request.user.username})
+        user = request.user
+        return Response(
+            {
+                "authenticated": True,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "is_staff": user.is_staff,
+                    "is_superuser": user.is_superuser,
+                    "date_joined": user.date_joined,
+                },
+            }
+        )
