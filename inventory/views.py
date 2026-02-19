@@ -10,6 +10,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.pagination import LimitOffsetPagination
 from .filters import ProductFilter, SupplierFilter, StockMovementFilter
 import django_filters.rest_framework as filters
+from rest_framework.decorators import action
+from sales.serializers import SalesSerializer
+from rest_framework.response import Response
+from sales.models import Sales
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -25,13 +29,13 @@ class ProductViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = ProductFilter
-    # def get_queryset(self):
-    #     query_set = super().get_queryset()
-    #     params = self.request.query_params
-    #     if params.get("low_stock") == "true":
 
-    #         query_set = query_set.filter(stock_quantity__lt=F("low_stock_limit"))
-    #     return query_set
+    @action(detail=True, methods=["get"])
+    def sale(self, request, pk=None):
+        product = self.get_object()
+        sales = Sales.objects.filter(items__product=product).distinct()
+        serializer = SalesSerializer(sales, many=True)
+        return Response(serializer.data)
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
@@ -39,7 +43,6 @@ class SupplierViewSet(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = [AllowAny]  # TODO remove this , only used for dev
-
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = SupplierFilter
 

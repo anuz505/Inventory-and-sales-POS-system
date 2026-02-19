@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from .models import Customer, Sales
+from .models import Customer, Sales, SalesItem
 
 
 class CustomerFilters(filters.FilterSet):
@@ -11,6 +11,15 @@ class CustomerFilters(filters.FilterSet):
     class Meta:
         model = Customer
         fields = ["email", "phone_number"]
+
+
+class SalesItemFilters(filters.FilterSet):
+    product = filters.CharFilter(field_name="product", lookup_expr="exact")
+    sale = filters.CharFilter(field_name="sale", lookup_expr="exact")
+
+    class Meta:
+        model = SalesItem
+        fields = ["product", "sale"]
 
 
 class SalesFilters(filters.FilterSet):

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from sales.models import Customer, Sales, SalesItem
+
 from django.db import transaction
 from decimal import Decimal
 from inventory.models import Product, StockMovement
@@ -22,6 +23,8 @@ class SalesItemSerializer(serializers.ModelSerializer):
 
 class SalesSerializer(serializers.ModelSerializer):
     items = SalesItemSerializer(many=True)
+    customer_name = serializers.CharField(source="customer.name", read_only=True)
+    staff_name = serializers.CharField(source="user.username", read_only=True)
 
     class Meta:
         model = Sales
