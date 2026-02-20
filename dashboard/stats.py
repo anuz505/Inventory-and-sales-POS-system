@@ -27,7 +27,7 @@ def get_trend(stat: str, start, end, stats_fn):
         trend = "no_change"
     percentage = (diff / prev_stat * 100) if prev_stat > 0 else 100
     return {
-        f"this_period{stat}": this_stat,
+        f"this_period_{stat}": this_stat,
         f"prev_period_{stat}": prev_stat,
         "difference": diff,
         "percentage_change": round(percentage, 2),

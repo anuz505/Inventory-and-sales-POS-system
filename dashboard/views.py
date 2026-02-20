@@ -13,14 +13,15 @@ from sales.models import Sales
 from .report_generator import generate_csv, generate_filename
 from .utils import get_period_range_from_request
 from inventory.models import StockMovement
+from internship_task.logger import LoggerSetup
 
 
 class DashboardView(APIView):
-
+    logger = LoggerSetup.setup_logger(__name__)
     permission_classes = [AllowAny]
 
     def get(self, request, format=None):
-
+        self.logger.info("Dashboard info")
         start_date, end_date, _ = get_period_range_from_request(request)
         dashboard_metrics = {}
         dashboard_metrics = {

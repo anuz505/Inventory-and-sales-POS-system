@@ -58,4 +58,5 @@ def get_period_range_from_request(request, default_period="month"):
         return start_date, end_date, "custom"
 
     start_date, end_date = get_start_date(default_period)
+    # print(f"Period: {period}, Start: {start_date}, End: {end_date}")
     return start_date, end_date, default_period
