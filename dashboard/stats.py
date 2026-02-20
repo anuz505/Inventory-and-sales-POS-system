@@ -42,8 +42,8 @@ def get_prev_period(start, end):
     return prev_start, prev_end
 
 
-def get_sales_trend(period: str):
-    start, end = get_start_date(period)
+def get_sales_trend(start, end):
+    # start, end = get_start_date(period)
     prev_start, prev_end = get_prev_period(start, end)
     this_sales = get_sales_stats(startdate=start, enddate=end)["total_sales"]
     prev_sales = get_sales_stats(startdate=prev_start, enddate=prev_end)["total_sales"]
