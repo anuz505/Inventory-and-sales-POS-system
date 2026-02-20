@@ -8,63 +8,52 @@ periods = {
     "this_year": "year",
     "today": "today",
 }
+from .utils import get_prev_period
 from sales.models import Sales, Customer, SalesItem
 from inventory.models import Product, StockMovement
 
 
-def get_start_date(period: str):
-    now = timezone.now()
-    if period == "month":
-        start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        end = now
-    elif period == "3months":
-        month = (now.month - 3) % 12 or 12
-        year = now.year if now.month > 3 else now.year - 1
-        start = now.replace(
-            year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        end = now
-    elif period == "today":
-        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        end = now
-    elif period == "year":
-        start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        end = now
-    else:
-        raise ValueError("Invalid period. Use 'month', '3months', or 'year'.")
-    return start, end
+def get_trend(stat: str, start, end, stats_fn):
+    prev_start_date, prev_end_date = get_prev_period(start, end)
 
-
-def get_prev_period(start, end):
-    duration = end - start
-    prev_end = start
-    prev_start = start - duration
-    return prev_start, prev_end
-
-
-def get_sales_trend(start, end):
-    # start, end = get_start_date(period)
-    prev_start, prev_end = get_prev_period(start, end)
-    this_sales = get_sales_stats(startdate=start, enddate=end)["total_sales"]
-    prev_sales = get_sales_stats(startdate=prev_start, enddate=prev_end)["total_sales"]
-    diff = this_sales - prev_sales
-
+    this_stat = stats_fn(startdate=start, enddate=end)[stat]
+    prev_stat = stats_fn(startdate=prev_start_date, enddate=prev_end_date)[stat]
+    diff = this_stat - prev_stat
     if diff > 0:
         trend = "increasing"
     elif diff < 0:
         trend = "declining"
     else:
         trend = "no_change"
-
-    percentage = (diff / prev_sales * 100) if prev_sales > 0 else 100
-
+    percentage = (diff / prev_stat * 100) if prev_stat > 0 else 100
     return {
-        "this_period_sales": this_sales,
-        "previous_period_sales": prev_sales,
+        f"this_period{stat}": this_stat,
+        f"prev_period_{stat}": prev_stat,
         "difference": diff,
         "percentage_change": round(percentage, 2),
         "trend": trend,
     }
+
+
+def get_sales_trend(start, end):
+    sales_trend = get_trend(
+        stats_fn=get_sales_stats, start=start, end=end, stat="total_sales"
+    )
+    return {"sales_trend": sales_trend}
+
+
+def get_profit_trend(start, end):
+    profit_trend = get_trend(
+        stats_fn=get_sales_stats, start=start, end=end, stat="total_profit_amount"
+    )
+    return {"profit_trend": profit_trend}
+
+
+def get_customers_trend(start, end):
+    customer_trend = get_trend(
+        stats_fn=get_inventory_stats, start=start, end=end, stat="total_customers"
+    )
+    return {"customer_trend": customer_trend}
 
 
 def get_sales_stats(startdate, enddate):
@@ -103,6 +92,7 @@ def get_sales_stats(startdate, enddate):
         )
         .order_by("-total_quantity")[:3]
     )
+
     top_customers = (
         Sales.objects.values("customer__name")
         .filter(created_at__range=[startdate, enddate])

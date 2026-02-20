@@ -2,7 +2,13 @@ from rest_framework.views import APIView
 
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .stats import get_inventory_stats, get_sales_stats, get_sales_trend
+from .stats import (
+    get_customers_trend,
+    get_inventory_stats,
+    get_profit_trend,
+    get_sales_stats,
+    get_sales_trend,
+)
 from sales.models import Sales
 from .report_generator import generate_csv, generate_filename
 from .utils import get_period_range_from_request
@@ -27,13 +33,15 @@ class DashboardView(APIView):
         return Response(dashboard_metrics)
 
 
-class SalesTrend(APIView):
+class Trends(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, format=None):
         start_date, end_date, _ = get_period_range_from_request(request)
         sales_trend = get_sales_trend(start=start_date, end=end_date)
-        return Response(sales_trend)
+        profit_trend = get_profit_trend(start=start_date, end=end_date)
+        customer_trend = get_customers_trend(start=start_date, end=end_date)
+        return Response({**sales_trend, **profit_trend, **customer_trend})
 
 
 class SalesReportView(APIView):
