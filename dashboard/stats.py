@@ -1,6 +1,7 @@
 from django.utils import timezone
-from django.db.models import Sum, Count
-from django.db.models import Sum, Count, Avg, F
+from django.db.models import Sum, Count, F
+
+from django.db.models.functions import TruncMonth
 
 periods = {
     "this_month": "month",
@@ -56,6 +57,39 @@ def get_customers_trend(start, end):
     return {"customer_trend": customer_trend}
 
 
+def get_revenue_profit_data_vis(startdate, enddate):
+    # group by months
+    chart_data = (
+        SalesItem.objects.filter(created_at__range=[startdate, enddate])
+        .annotate(month=TruncMonth("created_at"))
+        .values("month")
+        .annotate(
+            revenue=Sum(F("quantity") * F("unit_price")),
+            profit=Sum(
+                (F("quantity") * F("product__selling_price"))
+                - (F("quantity") * F("product__cost_price"))
+            ),
+        )
+        .order_by("month")
+    )
+    # formatted_data for frontend
+
+    formatted_data = []
+    for item in chart_data:
+        revenue = item["revenue"] or 0
+        profit = item["profit"] or 0
+        profit_margin = round((profit / revenue * 100), 2) if revenue > 0 else 0
+        formatted_data.append(
+            {
+                "month": item["month"].strftime("%b"),
+                "revenue": revenue,
+                "profit": profit,
+                "profit_margin": profit_margin,
+            }
+        )
+    return formatted_data
+
+
 def get_sales_stats(startdate, enddate):
     total_sales = Sales.objects.filter(
         payment_status="completed", created_at__range=[startdate, enddate]
@@ -90,7 +124,7 @@ def get_sales_stats(startdate, enddate):
             total_quantity=Sum("quantity"),
             total_revenue=Sum(F("quantity") * F("unit_price")),
         )
-        .order_by("-total_quantity")[:3]
+        .order_by("-total_revenue")[:5]
     )
 
     top_customers = (
