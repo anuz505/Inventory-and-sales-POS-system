@@ -1,93 +1,18 @@
 import random
 from decimal import Decimal
-from datetime import timedelta, datetime
-import math
-from django.utils import timezone
+from datetime import timedelta
 from django.core.management.base import BaseCommand
+from django.utils import lorem_ipsum, timezone
 from inventory.models import Supplier, Category, Product, StockMovement
 from users.models import User
 from sales.models import Sales, SalesItem, Customer
 
 
 class Command(BaseCommand):
-    help = "Creates realistic application data with meaningful timestamps for visualization"
-
-    # -------------------------------------------------------------------------
-    # Date/time helpers
-    # -------------------------------------------------------------------------
-
-    def business_hour_datetime(self, base_date):
-        """Return base_date with a realistic business-hour time attached."""
-        hour = random.choices(
-            range(8, 21),
-            weights=[2, 5, 8, 10, 8, 12, 10, 8, 6, 5, 4, 3, 2],
-            k=1,
-        )[0]
-        minute = random.randint(0, 59)
-        return base_date.replace(
-            hour=hour, minute=minute, second=random.randint(0, 59), microsecond=0
-        )
-
-    def date_range_dates(self, start_days_ago, end_days_ago=0, n=1):
-        """Return n random dates between start_days_ago and end_days_ago."""
-        results = []
-        for _ in range(n):
-            days = random.randint(end_days_ago, start_days_ago)
-            dt = timezone.now() - timedelta(days=days)
-            results.append(dt.replace(microsecond=0))
-        return results if n > 1 else results[0]
-
-    def trending_sale_date(self, index, total, max_days_ago=365):
-        """
-        Returns a date that biases more recent dates for higher-index sales,
-        simulating business growth over time.
-        """
-        progress = index / total
-        latest_possible = int((1 - progress) * max_days_ago)
-        earliest_possible = max(latest_possible + 30, max_days_ago)
-        days_ago = random.randint(latest_possible, earliest_possible)
-        base = timezone.now() - timedelta(days=days_ago)
-        return self.business_hour_datetime(base)
-
-    def is_weekend(self, dt):
-        return dt.weekday() >= 5
-
-    def seasonal_multiplier(self, dt):
-        """Higher sales around Nov–Dec (holiday) and Jun–Jul (summer)."""
-        month = dt.month
-        seasonal = {
-            1: 0.7,
-            2: 0.7,
-            3: 0.8,
-            4: 0.9,
-            5: 1.0,
-            6: 1.2,
-            7: 1.3,
-            8: 1.0,
-            9: 0.9,
-            10: 1.0,
-            11: 1.4,
-            12: 1.6,
-        }
-        return seasonal.get(month, 1.0)
-
-    def pick_realistic_date(self, index, total, max_days_ago=365):
-        """Combines growth trend + seasonality + weekday preference."""
-        for _ in range(20):
-            candidate = self.trending_sale_date(index, total, max_days_ago)
-            weight = self.seasonal_multiplier(candidate)
-            if self.is_weekend(candidate):
-                weight *= 0.7
-            if random.random() < weight / 1.6:
-                return candidate
-        return candidate  # fallback
-
-    # -------------------------------------------------------------------------
-    # Main handler
-    # -------------------------------------------------------------------------
+    help = "creates application data"
 
     def handle(self, *args, **options):
-        self.stdout.write("Clearing existing data...")
+        self.stdout.write("Clearning existing data")
         SalesItem.objects.all().delete()
         Sales.objects.all().delete()
         Customer.objects.all().delete()
@@ -96,8 +21,7 @@ class Command(BaseCommand):
         Category.objects.all().delete()
         Supplier.objects.all().delete()
 
-        # --- Categories ---
-        self.stdout.write("Creating categories...")
+        self.stdout.write("Creating Categories")
         categories = [
             Category.objects.create(
                 name="Electronics", description="Electronic devices and accessories"
@@ -113,79 +37,79 @@ class Command(BaseCommand):
                 name="Furniture", description="Home and office furniture"
             ),
         ]
-        self.stdout.write(self.style.SUCCESS(f"  ✓ {len(categories)} categories"))
-
-        # --- Suppliers ---
+        self.stdout.write(self.style.SUCCESS(f"Created {len(categories)} categories"))
+        # Create Suppliers
         self.stdout.write("Creating suppliers...")
-        suppliers_data = [
-            (
-                "Tech Distributors Inc",
-                "contact@techdist.com",
-                1234567890,
-                "123 Tech Street, CA",
+        suppliers = [
+            Supplier.objects.create(
+                name="Tech Distributors Inc",
+                email="contact@techdist.com",
+                phone=1234567890,
+                address="123 Tech Street, Silicon Valley, CA",
             ),
-            (
-                "Fashion Wholesale Ltd",
-                "info@fashionwholesale.com",
-                9876543210,
-                "456 Fashion Ave, NY",
+            Supplier.objects.create(
+                name="Fashion Wholesale Ltd",
+                email="info@fashionwholesale.com",
+                phone=9876543210,
+                address="456 Fashion Ave, New York, NY",
             ),
-            (
-                "Global Foods Supply",
-                "sales@globalfoods.com",
-                5551234567,
-                "789 Food Lane, IL",
+            Supplier.objects.create(
+                name="Global Foods Supply",
+                email="sales@globalfoods.com",
+                phone=5551234567,
+                address="789 Food Lane, Chicago, IL",
             ),
-            (
-                "Book Publishers Co",
-                "orders@bookpub.com",
-                5559876543,
-                "321 Library Rd, MA",
+            Supplier.objects.create(
+                name="Book Publishers Co",
+                email="orders@bookpub.com",
+                phone=5559876543,
+                address="321 Library Rd, Boston, MA",
             ),
-            (
-                "Furniture Depot",
-                "support@furnituredepot.com",
-                5555555555,
-                "654 Furniture Blvd, TX",
+            Supplier.objects.create(
+                name="Furniture Depot",
+                email="support@furnituredepot.com",
+                phone=5555555555,
+                address="654 Furniture Blvd, Houston, TX",
             ),
         ]
-        suppliers = []
-        for name, email, phone, address in suppliers_data:
-            suppliers.append(
-                Supplier.objects.create(
-                    name=name, email=email, phone=phone, address=address
-                )
-            )
-        self.stdout.write(self.style.SUCCESS(f"  ✓ {len(suppliers)} suppliers"))
+        self.stdout.write(self.style.SUCCESS(f"Created {len(suppliers)} suppliers"))
 
-        # --- Products ---
-        # Products were "added to the system" staggered between 300–365 days ago.
-        # We use .update() after creation to bypass auto_now_add on created_at,
-        # and set updated_at equal to created_at so it doesn't show today's date.
+        # Create Products
         self.stdout.write("Creating products...")
         products_data = [
+            # Electronics
             ("Laptop", "Electronics", "Tech Distributors Inc", 800, 1200, 50),
             ("Smartphone", "Electronics", "Tech Distributors Inc", 500, 750, 100),
-            ("Wireless Earbuds", "Electronics", "Tech Distributors Inc", 30, 80, 120),
+            ("Wireless Mouse", "Electronics", "Tech Distributors Inc", 15, 30, 200),
+            ("USB Cable", "Electronics", "Tech Distributors Inc", 5, 12, 500),
+            ("Headphones", "Electronics", "Tech Distributors Inc", 50, 100, 150),
+            # Clothing
             ("T-Shirt", "Clothing", "Fashion Wholesale Ltd", 8, 20, 300),
             ("Jeans", "Clothing", "Fashion Wholesale Ltd", 25, 60, 150),
-            ("Winter Jacket", "Clothing", "Fashion Wholesale Ltd", 60, 150, 80),
-            ("Coffee Beans", "Food & Beverages", "Global Foods Supply", 10, 18, 200),
+            ("Jacket", "Clothing", "Fashion Wholesale Ltd", 40, 100, 75),
+            ("Sneakers", "Clothing", "Fashion Wholesale Ltd", 35, 80, 120),
+            # Food & Beverages
+            ("Coffee Beans", "Food & Beverages", "Global Foods Supply", 10, 18, 120),
             ("Organic Pasta", "Food & Beverages", "Global Foods Supply", 3, 8, 250),
+            ("Energy Drink", "Food & Beverages", "Global Foods Supply", 1.5, 3.5, 400),
             ("Green Tea", "Food & Beverages", "Global Foods Supply", 5, 12, 180),
+            # Books
             ("Python Programming", "Books", "Book Publishers Co", 20, 45, 80),
             ("Django Guide", "Books", "Book Publishers Co", 25, 55, 60),
-            ("Data Science 101", "Books", "Book Publishers Co", 22, 48, 70),
+            ("Web Development", "Books", "Book Publishers Co", 30, 65, 45),
+            ("Data Science", "Books", "Book Publishers Co", 35, 70, 55),
+            # Furniture
             ("Office Chair", "Furniture", "Furniture Depot", 100, 250, 40),
-            ("Standing Desk", "Furniture", "Furniture Depot", 200, 450, 25),
-            ("Bookshelf", "Furniture", "Furniture Depot", 80, 180, 35),
+            ("Desk", "Furniture", "Furniture Depot", 200, 450, 25),
+            ("Bookshelf", "Furniture", "Furniture Depot", 75, 180, 35),
+            ("Standing Desk", "Furniture", "Furniture Depot", 300, 650, 15),
         ]
-
         for idx, (name, cat_name, sup_name, cost, price, stock) in enumerate(
             products_data, 1
         ):
             category = next(c for c in categories if c.name == cat_name)
             supplier = next(s for s in suppliers if s.name == sup_name)
+
             product = Product.objects.create(
                 name=name,
                 sku=f"SKU-{idx:05d}",
@@ -197,10 +121,16 @@ class Command(BaseCommand):
                 stock_quantity=stock,
                 low_stock_limit=random.randint(10, 30),
             )
-            # Override auto_now_add — stagger product listing dates over the past year.
-            # updated_at is set to the same value so it doesn't falsely show today.
+
+            # ── HISTORICAL TIMESTAMPS ────────────────────────────────────────
+            # Backdate each product to a random point in the past year so that
+            # time-series charts show a gradual inventory build-up rather than
+            # everything appearing on the day the seeder was run.
+            # .update() bypasses auto_now_add / auto_now restrictions entirely.
+            # updated_at is set equal to created_at so it doesn't falsely
+            # spike on today's date in "last updated" charts.
             product_created_at = timezone.now() - timedelta(
-                days=random.randint(300, 365),
+                days=random.randint(30, 365),
                 hours=random.randint(8, 18),
                 minutes=random.randint(0, 59),
             )
@@ -208,16 +138,19 @@ class Command(BaseCommand):
                 created_at=product_created_at,
                 updated_at=product_created_at,
             )
+            # ────────────────────────────────────────────────────────────────
 
-        self.stdout.write(self.style.SUCCESS(f"  ✓ {len(products_data)} products"))
+        self.stdout.write(self.style.SUCCESS(f"Created {len(products_data)} products"))
 
-        # --- Users ---
+        # Create multiple users for stock movements
         self.stdout.write("Creating users...")
         users_data = [
             {
                 "username": "admin",
                 "email": "admin@example.com",
                 "password": "admin123",
+                "role": "admin",
+                "phone_number": "1234567890",
                 "is_staff": True,
                 "is_superuser": True,
             },
@@ -225,6 +158,8 @@ class Command(BaseCommand):
                 "username": "staff1",
                 "email": "staff1@example.com",
                 "password": "root",
+                "role": "staff",
+                "phone_number": "2345678901",
                 "is_staff": True,
                 "is_superuser": False,
             },
@@ -232,10 +167,22 @@ class Command(BaseCommand):
                 "username": "staff2",
                 "email": "staff2@example.com",
                 "password": "root",
+                "role": "staff",
+                "phone_number": "3456789012",
+                "is_staff": True,
+                "is_superuser": False,
+            },
+            {
+                "username": "manager1",
+                "email": "manager1@example.com",
+                "password": "root",
+                "role": "manager",
+                "phone_number": "4567890123",
                 "is_staff": True,
                 "is_superuser": False,
             },
         ]
+
         users = []
         for user_data in users_data:
             password = user_data.pop("password")
@@ -245,136 +192,183 @@ class Command(BaseCommand):
             if created:
                 user.set_password(password)
                 user.save()
-            users.append(user)
-        self.stdout.write(self.style.SUCCESS(f"  ✓ {len(users)} users"))
+                users.append(user)
+                self.stdout.write(
+                    f"Created user: {user.username} ({user.get_role_display()})"
+                )
+            else:
+                users.append(user)
 
-        all_products = list(Product.objects.all())
+        self.stdout.write(self.style.SUCCESS(f"Created/verified {len(users)} users"))
 
-        # --- Stock Movements ---
+        # Create Stock Movements
         self.stdout.write("Creating stock movements...")
-        sm_count = 0
+        all_products = list(Product.objects.all())
+        stock_movements = []
 
-        for product in all_products:
-            # 1. Initial purchase (~340–365 days ago)
-            days_ago = random.randint(340, 365)
-            initial_dt = timezone.now() - timedelta(days=days_ago)
-            mv = StockMovement.objects.create(
+        # Create initial stock-in movements (purchases)
+        for product in all_products[:10]:
+            StockMovement.objects.create(
                 product=product,
-                quantity=random.randint(50, 150),
+                quantity=random.randint(20, 100),
                 movement_type="IN",
                 reason="PURCHASE",
-                user=users[0],
+                user=random.choice(users),
                 notes=f"Initial stock purchase for {product.name}",
             )
-            StockMovement.objects.filter(pk=mv.pk).update(created_at=initial_dt)
-            sm_count += 1
+            stock_movements.append("purchase")
 
-            # 2. Periodic restocks — roughly every 6–8 weeks over the past year
-            restock_intervals = sorted(
-                random.sample(range(20, 330), k=random.randint(3, 6))
+        # Create some sales (stock-out)
+        for product in random.sample(all_products, 8):
+            StockMovement.objects.create(
+                product=product,
+                quantity=random.randint(5, 20),
+                movement_type="OUT",
+                reason="SALE",
+                user=random.choice(users),
+                notes=f"Customer purchase of {product.name}",
             )
-            for days_ago in restock_intervals:
-                dt = timezone.now() - timedelta(
-                    days=days_ago, hours=random.randint(8, 17)
-                )
-                mv = StockMovement.objects.create(
-                    product=product,
-                    quantity=random.randint(20, 80),
-                    movement_type="IN",
-                    reason="PURCHASE",
-                    user=random.choice(users),
-                    notes=f"Restock order for {product.name}",
-                )
-                StockMovement.objects.filter(pk=mv.pk).update(created_at=dt)
-                sm_count += 1
+            stock_movements.append("sale")
 
-            # 3. Occasional adjustments / losses
-            for _ in range(random.randint(1, 3)):
-                days_ago = random.randint(1, 330)
-                dt = timezone.now() - timedelta(
-                    days=days_ago, hours=random.randint(9, 18)
-                )
-                movement_type = random.choice(["OUT", "OUT", "ADJUSTMENT"])
-                reason = random.choice(["DAMAGE", "RETURN", "ADJUSTMENT"])
-                mv = StockMovement.objects.create(
-                    product=product,
-                    quantity=random.randint(1, 10),
-                    movement_type=movement_type,
-                    reason=reason,
-                    user=random.choice(users),
-                    notes=f"{reason.capitalize()} adjustment for {product.name}",
-                )
-                StockMovement.objects.filter(pk=mv.pk).update(created_at=dt)
-                sm_count += 1
+        # Create some returns (stock-in)
+        for product in random.sample(all_products, 5):
+            StockMovement.objects.create(
+                product=product,
+                quantity=random.randint(1, 5),
+                movement_type="IN",
+                reason="RETURN",
+                user=random.choice(users),
+                notes=f"Customer returned {product.name}",
+            )
+            stock_movements.append("return")
 
-        self.stdout.write(self.style.SUCCESS(f"  ✓ {sm_count} stock movements"))
+        # Create some damaged items (stock-out)
+        for product in random.sample(all_products, 3):
+            StockMovement.objects.create(
+                product=product,
+                quantity=random.randint(1, 3),
+                movement_type="OUT",
+                reason="DAMAGED",
+                user=random.choice(users),
+                notes=f"Damaged {product.name} removed from inventory",
+            )
+            stock_movements.append("damaged")
 
-        # --- Customers ---
+        # Create some manual adjustments
+        for product in random.sample(all_products, 4):
+            movement_type = random.choice(["IN", "OUT"])
+            StockMovement.objects.create(
+                product=product,
+                quantity=random.randint(1, 10),
+                movement_type=movement_type,
+                reason="MANUAL",
+                user=random.choice(users),
+                notes=f"Manual inventory adjustment for {product.name}",
+            )
+            stock_movements.append("manual")
+
+        self.stdout.write(
+            self.style.SUCCESS(f"Created {len(stock_movements)} stock movements")
+        )
+
+        # Create Customers
         self.stdout.write("Creating customers...")
-        customer_names = [
-            ("Alice Johnson", "alice@example.com", "5550001001"),
-            ("Bob Martinez", "bob@example.com", "5550001002"),
-            ("Carol Lee", "carol@example.com", "5550001003"),
-            ("David Kim", "david@example.com", "5550001004"),
-            ("Emma Wilson", "emma@example.com", "5550001005"),
-            ("Frank Davis", "frank@example.com", "5550001006"),
-            ("Grace Park", "grace@example.com", "5550001007"),
-            ("Henry Brown", "henry@example.com", "5550001008"),
-            ("Isla Moore", "isla@example.com", "5550001009"),
-            ("Jack Taylor", "jack@example.com", "5550001010"),
+        customers_data = [
+            {
+                "name": "John Smith",
+                "email": "john.smith@example.com",
+                "phone_number": "5551234567",
+                "address": "123 Main St, Springfield, IL",
+            },
+            {
+                "name": "Emma Johnson",
+                "email": "emma.j@example.com",
+                "phone_number": "5552345678",
+                "address": "456 Oak Ave, Portland, OR",
+            },
+            {
+                "name": "Michael Brown",
+                "email": "m.brown@example.com",
+                "phone_number": "5553456789",
+                "address": "789 Pine Rd, Austin, TX",
+            },
+            {
+                "name": "Sarah Davis",
+                "email": "sarah.davis@example.com",
+                "phone_number": "5554567890",
+                "address": "321 Elm St, Seattle, WA",
+            },
+            {
+                "name": "David Wilson",
+                "email": "d.wilson@example.com",
+                "phone_number": "5555678901",
+                "address": "654 Maple Dr, Denver, CO",
+            },
+            {
+                "name": "Lisa Anderson",
+                "email": "lisa.a@example.com",
+                "phone_number": "5556789012",
+                "address": "987 Cedar Ln, Miami, FL",
+            },
+            {
+                "name": "James Taylor",
+                "email": "james.t@example.com",
+                "phone_number": "5557890123",
+                "address": "147 Birch Blvd, Atlanta, GA",
+            },
+            {
+                "name": "Jennifer Martinez",
+                "email": "jen.martinez@example.com",
+                "phone_number": "5558901234",
+                "address": "258 Spruce St, Phoenix, AZ",
+            },
         ]
+
         customers = []
-        for i, (name, email, phone) in enumerate(customer_names):
-            customers.append(
-                Customer.objects.create(
-                    name=name,
-                    email=email,
-                    phone_number=phone,
-                    address=f"{random.randint(1, 999)} Main St",
-                )
-            )
-        self.stdout.write(self.style.SUCCESS(f"  ✓ {len(customers)} customers"))
+        for customer_data in customers_data:
+            customer = Customer.objects.create(**customer_data)
+            customers.append(customer)
 
-        # --- Sales ---
+        self.stdout.write(self.style.SUCCESS(f"Created {len(customers)} customers"))
+
+        # Create Sales
         self.stdout.write("Creating sales...")
-        TOTAL_SALES = 120
-        payment_methods = ["cash", "card", "card", "upi", "net_banking", "wallet"]
-        payment_statuses = ["completed"] * 10 + ["pending"] * 2 + ["refunded"] * 1
+        payment_methods = ["cash", "card", "upi", "net_banking", "wallet"]
+        payment_statuses = ["completed", "pending", "refunded"]
+        sales_records = []
 
-        for i in range(1, TOTAL_SALES + 1):
-            sale_date = self.pick_realistic_date(i, TOTAL_SALES, max_days_ago=365)
+        # Create 15 sales transactions
+        for i in range(1, 16):
             customer = random.choice(customers)
             user = random.choice(users)
-            pay_method = random.choice(payment_methods)
-            pay_status = random.choice(payment_statuses)
+            payment_method = random.choice(payment_methods)
+            payment_status = (
+                random.choice(payment_statuses) if i % 7 == 0 else "completed"
+            )
 
+            # Create sale
             sale = Sales.objects.create(
-                invoice_number=f"INV-{sale_date.year:04d}-{i:05d}",
+                invoice_number=f"INV-{2026:04d}-{i:05d}",
                 customer=customer,
                 user=user,
-                payment_method=pay_method,
-                payment_status=pay_status,
-                notes=f"Sale transaction {i}" if i % 4 == 0 else "",
+                payment_method=payment_method,
+                payment_status=payment_status,
+                notes=f"Sale transaction {i}" if i % 3 == 0 else "",
             )
-            Sales.objects.filter(pk=sale.pk).update(created_at=sale_date)
 
-            num_items = random.randint(1, 4)
+            # Add 1-5 random products to this sale
+            num_items = random.randint(1, 5)
             selected_products = random.sample(all_products, num_items)
+
             sale_subtotal = Decimal("0")
             sale_discount = Decimal("0")
 
             for product in selected_products:
-                if product.selling_price < 50:
-                    quantity = random.randint(1, 8)
-                elif product.selling_price < 200:
-                    quantity = random.randint(1, 4)
-                else:
-                    quantity = random.randint(1, 2)
-
+                quantity = random.randint(1, 5)
                 unit_price = product.selling_price
                 item_discount = Decimal(
-                    str(random.choices([0, 5, 10, 15], weights=[60, 20, 15, 5])[0])
-                )
+                    str(random.choice([0, 0, 0, 5, 10, 15]))
+                )  # Most items have no discount
                 item_subtotal = (unit_price * quantity) - item_discount
 
                 SalesItem.objects.create(
@@ -389,27 +383,18 @@ class Command(BaseCommand):
                 sale_subtotal += unit_price * quantity
                 sale_discount += item_discount
 
+            # Update sale totals
             sale.subtotal = sale_subtotal
             sale.discount_amount = sale_discount
             sale.total_amount = sale_subtotal - sale_discount
             sale.save()
 
-        self.stdout.write(self.style.SUCCESS(f"  ✓ {TOTAL_SALES} sales records"))
-        self.stdout.write(
-            self.style.SUCCESS(f"  ✓ {SalesItem.objects.count()} sales items")
-        )
-        self.stdout.write(
-            self.style.SUCCESS(
-                "\n🎉 Database populated with realistic historical data!\n"
-                "   Trends baked in:\n"
-                "   • Products listed 300–365 days ago with staggered timestamps\n"
-                "   • updated_at starts equal to created_at (not today)\n"
-                "   • Sales volume grows over time (business growth curve)\n"
-                "   • Nov–Dec and Jun–Jul seasonal spikes\n"
-                "   • Weekdays busier than weekends\n"
-                "   • Business-hours time distribution (peaks at 11 AM and 1 PM)\n"
-                "   • Stock restocks every ~6–8 weeks per product\n"
-                "   • Card payments dominant; cash/UPI/etc. as secondary\n"
-                "   • Expensive items sold in lower quantities\n"
-            )
-        )
+            sales_records.append(sale)
+
+        self.stdout.write(self.style.SUCCESS(f"Created {len(sales_records)} sales"))
+
+        # Count total sales items
+        total_items = SalesItem.objects.count()
+        self.stdout.write(self.style.SUCCESS(f"Created {total_items} sales items"))
+
+        self.stdout.write(self.style.SUCCESS("\n Database populated successfully!"))

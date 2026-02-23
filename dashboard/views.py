@@ -39,7 +39,9 @@ class Trends(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, format=None):
-        start_date, end_date, _ = get_period_range_from_request(request)
+        start_date, end_date, _ = get_period_range_from_request(
+            request, default_period="12months"
+        )
         sales_trend = get_sales_trend(start=start_date, end=end_date)
         profit_trend = get_profit_trend(start=start_date, end=end_date)
         customer_trend = get_customers_trend(start=start_date, end=end_date)

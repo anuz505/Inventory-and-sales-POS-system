@@ -8,6 +8,7 @@ periods = {
     "last_three_months": "3months",
     "this_year": "year",
     "today": "today",
+    "12months": "12months",
 }
 from .utils import get_prev_period
 from sales.models import Sales, Customer, SalesItem
@@ -81,7 +82,7 @@ def get_revenue_profit_data_vis(startdate, enddate):
         profit_margin = round((profit / revenue * 100), 2) if revenue > 0 else 0
         formatted_data.append(
             {
-                "month": item["month"].strftime("%b"),
+                "month": item["month"].strftime("%b %Y"),
                 "revenue": revenue,
                 "profit": profit,
                 "profit_margin": profit_margin,
@@ -129,7 +130,7 @@ def get_sales_stats(startdate, enddate):
 
     top_customers = (
         Sales.objects.values("customer__name")
-        .filter(created_at__range=[startdate, enddate])
+        .filter(payment_status="completed", created_at__range=[startdate, enddate])
         .annotate(total_orders=Count("id"), total_spent=Sum("total_amount"))
         .order_by("-total_spent")[:3]
     )
@@ -165,9 +166,9 @@ def get_inventory_stats(startdate, enddate):
         .annotate(count=Count("id"))
         .order_by("-count")
     )
-    low_supply_products = Product.objects.filter(
-        stock_quantity__lt=F("low_stock_limit"), created_at__range=[startdate, enddate]
-    )[:3]
+    # low_supply_products = Product.objects.filter(
+    #     stock_quantity__lt=F("low_stock_limit"), created_at__range=[startdate, enddate]
+    # )[:3]
 
     total_customers = Customer.objects.filter(
         created_at__range=[startdate, enddate]
@@ -175,8 +176,8 @@ def get_inventory_stats(startdate, enddate):
 
     return {
         "total_refunds": list(total_refunds),
-        "low_supply_products": list(
-            low_supply_products.values("name", "stock_quantity", "low_stock_limit")
-        ),
+        # "low_supply_products": list(
+        #     low_supply_products.values("name", "stock_quantity", "low_stock_limit")
+        # ),
         "total_customers": total_customers["customer_count"],
     }

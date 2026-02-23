@@ -1,5 +1,5 @@
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 from .stats import periods
 
 
@@ -21,6 +21,12 @@ def get_start_date(period: str):
     elif period == "year":
         start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
         end = now
+    elif period == "12months":
+        start = (now - timedelta(days=365)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        end = now
+
     else:
         raise ValueError("Invalid period. Use 'month', '3months', or 'year'.")
     return start, end
@@ -33,7 +39,7 @@ def get_prev_period(start, end):
     return prev_start, prev_end
 
 
-def get_period_range_from_request(request, default_period="month"):
+def get_period_range_from_request(request, default_period="12months"):
     now = timezone.now()
 
     period = request.query_params.get("period")
