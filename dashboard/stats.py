@@ -1,5 +1,5 @@
 from django.utils import timezone
-from django.db.models import Sum, Count, F
+from django.db.models import Sum, Count, F, ExpressionWrapper, DecimalField
 
 from django.db.models.functions import TruncMonth
 
@@ -12,7 +12,7 @@ periods = {
 }
 from .utils import get_prev_period
 from sales.models import Sales, Customer, SalesItem
-from inventory.models import StockMovement
+from inventory.models import StockMovement, Product
 
 
 def get_trend(stat: str, start, end, stats_fn):
@@ -59,21 +59,30 @@ def get_customers_trend(start, end):
 
 
 def get_revenue_profit_data_vis(startdate, enddate):
-    # group by months
     chart_data = (
-        SalesItem.objects.filter(created_at__range=[startdate, enddate])
-        .annotate(month=TruncMonth("created_at"))
+        SalesItem.objects.filter(
+            sale__payment_status="completed",
+            sale__created_at__range=[startdate, enddate],
+        )
+        .annotate(month=TruncMonth("sale__created_at"))
         .values("month")
         .annotate(
-            revenue=Sum(F("quantity") * F("unit_price")),
+            revenue=Sum(
+                ExpressionWrapper(
+                    F("quantity") * F("unit_price"),
+                    output_field=DecimalField(max_digits=12, decimal_places=2),
+                )
+            ),
             profit=Sum(
-                (F("quantity") * F("product__selling_price"))
-                - (F("quantity") * F("product__cost_price"))
+                ExpressionWrapper(
+                    (F("quantity") * F("product__selling_price"))
+                    - (F("quantity") * F("product__cost_price")),
+                    output_field=DecimalField(max_digits=12, decimal_places=2),
+                )
             ),
         )
         .order_by("month")
     )
-    # formatted_data for frontend
 
     formatted_data = []
     for item in chart_data:
@@ -88,6 +97,7 @@ def get_revenue_profit_data_vis(startdate, enddate):
                 "profit_margin": profit_margin,
             }
         )
+
     return formatted_data
 
 
@@ -95,15 +105,16 @@ def get_sales_stats(startdate, enddate):
     total_sales = Sales.objects.filter(
         payment_status="completed", created_at__range=[startdate, enddate]
     ).aggregate(total=Sum("total_amount"))
-
     highest_revenue_payment_method = (
         Sales.objects.values("payment_method")
-        .filter(created_at__range=[startdate, enddate])
+        .filter(payment_status="completed", created_at__range=[startdate, enddate])
         .annotate(total_sales=Sum("total_amount"))
         .order_by("-total_sales")
     )
     cash_sales_revenue = Sales.objects.filter(
-        payment_method="cash", created_at__range=[startdate, enddate]
+        payment_status="completed",
+        payment_method="cash",
+        created_at__range=[startdate, enddate],
     ).aggregate(total=Sum("total_amount"), count=Count("id"))
     total_profit = (
         SalesItem.objects.filter(created_at__range=[startdate, enddate])
@@ -166,9 +177,19 @@ def get_inventory_stats(startdate, enddate):
         .annotate(count=Count("id"))
         .order_by("-count")
     )
-    # low_supply_products = Product.objects.filter(
-    #     stock_quantity__lt=F("low_stock_limit"), created_at__range=[startdate, enddate]
-    # )[:3]
+    total_products_count = Product.objects.filter(
+        created_at__range=[startdate, enddate]
+    ).count()
+
+    total_low_supply_products = Product.objects.filter(
+        stock_quantity__lt=F("low_stock_limit"), created_at__range=[startdate, enddate]
+    ).count()
+    low_supply_percentage = (
+        (total_low_supply_products / total_products_count) * 100
+        if total_products_count > 0
+        else 0
+    )
+    # .
 
     total_customers = Customer.objects.filter(
         created_at__range=[startdate, enddate]
@@ -176,8 +197,7 @@ def get_inventory_stats(startdate, enddate):
 
     return {
         "total_refunds": list(total_refunds),
-        # "low_supply_products": list(
-        #     low_supply_products.values("name", "stock_quantity", "low_stock_limit")
-        # ),
+        "total_low_supply_products": total_low_supply_products,
+        "low_supply_percentage": low_supply_percentage,
         "total_customers": total_customers["customer_count"],
     }
