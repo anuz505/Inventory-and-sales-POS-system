@@ -23,10 +23,10 @@ class DashboardView(APIView):
 
     def get(self, request, format=None):
         self.logger.info("Dashboard info")
-        start_date, end_date, _ = get_period_range_from_request(request)
+        start_date, end_date, period = get_period_range_from_request(request)
         dashboard_metrics = {}
         dashboard_metrics = {
-            "this_period": {
+            period: {
                 "sales": get_sales_stats(start_date, enddate=end_date),
                 "inventory": get_inventory_stats(start_date, enddate=end_date),
             }
@@ -39,9 +39,7 @@ class Trends(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, format=None):
-        start_date, end_date, _ = get_period_range_from_request(
-            request, default_period="12months"
-        )
+        start_date, end_date, _ = get_period_range_from_request(request)
         sales_trend = get_sales_trend(start=start_date, end=end_date)
         profit_trend = get_profit_trend(start=start_date, end=end_date)
         customer_trend = get_customers_trend(start=start_date, end=end_date)

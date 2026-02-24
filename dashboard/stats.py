@@ -4,15 +4,15 @@ from django.db.models import Sum, Count, F
 from django.db.models.functions import TruncMonth
 
 periods = {
-    "this_month": "month",
-    "last_three_months": "3months",
-    "this_year": "year",
+    "month": "month",
+    "3months": "3months",
+    "year": "year",
     "today": "today",
     "12months": "12months",
 }
 from .utils import get_prev_period
 from sales.models import Sales, Customer, SalesItem
-from inventory.models import Product, StockMovement
+from inventory.models import StockMovement
 
 
 def get_trend(stat: str, start, end, stats_fn):

@@ -54,7 +54,8 @@ def generate_invoice_pdf(sale_id):
     c.drawRightString(
         width - 1 * inch,
         height - 1.6 * inch,
-        f"Date: {sale.created_at.strftime('%B %d, %Y')}",
+        f"Date: {sale.created_at.strftime('%B %d, %Y') if sale.created_at else 'N/A'}",
+        # TODO change this after populating db
     )
     c.drawRightString(
         width - 1 * inch, height - 1.8 * inch, f"Payment: {sale.payment_method}"

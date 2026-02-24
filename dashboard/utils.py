@@ -39,15 +39,15 @@ def get_prev_period(start, end):
     return prev_start, prev_end
 
 
-def get_period_range_from_request(request, default_period="12months"):
+def get_period_range_from_request(request):
     now = timezone.now()
 
     period = request.query_params.get("period")
-    from_date = request.query_params.get("from_date")
-    to_date = request.query_params.get("to_date")
+    from_date = request.query_params.get("from")
+    to_date = request.query_params.get("to")
 
     if period:
-        mapped_period = periods.get(period, default_period)
+        mapped_period = periods.get(period)
         start_date, end_date = get_start_date(mapped_period)
         return start_date, end_date, period
 
@@ -63,6 +63,6 @@ def get_period_range_from_request(request, default_period="12months"):
 
         return start_date, end_date, "custom"
 
-    start_date, end_date = get_start_date(default_period)
-    # print(f"Period: {period}, Start: {start_date}, End: {end_date}")
-    return start_date, end_date, default_period
+    start_date, end_date = get_start_date(period=period)
+
+    return start_date, end_date, period

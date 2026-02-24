@@ -44,8 +44,10 @@ class Product(models.Model):
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     stock_quantity = models.IntegerField(default=0)
     low_stock_limit = models.IntegerField(default=10)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        null=True, blank=True
+    )  # TODO remove null and blank after populating db
+    updated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         indexes = [
@@ -53,7 +55,7 @@ class Product(models.Model):
             models.Index(fields=["sku"]),  # for SKU lookups
             models.Index(fields=["category"]),  # for filtering by category
             models.Index(fields=["stock_quantity"]),  # for low stock queries
-            models.Index(fields=["-created_at"]),  # for recent products
+            models.Index(fields=["created_at"]),  # for recent products
         ]
         ordering = ["-created_at"]
         verbose_name_plural = "Products"
@@ -94,7 +96,9 @@ class StockMovement(models.Model):
         related_name="stock_movements",
     )
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        blank=True, null=True
+    )  # TODO remove after populating db
 
     class Meta:
         indexes = [
