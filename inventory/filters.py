@@ -40,16 +40,6 @@ class ProductFilter(filters.FilterSet):
     created_after = filters.DateFilter(field_name="created_at", lookup_expr="gte")
     created_before = filters.DateFilter(field_name="created_at", lookup_expr="lte")
 
-    ordering = filters.OrderingFilter(
-        fields=(
-            ("name", "name"),
-            ("selling_price", "price"),
-            ("cost_price", "cost"),
-            ("stock_quantity", "stock"),
-            ("created_at", "date"),
-        )
-    )
-
     def filter_low_stock(self, query_set, name, value):
         if value:
             return query_set.filter(stock_quantity__lte=F("low_stock_limit"))

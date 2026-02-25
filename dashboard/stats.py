@@ -111,11 +111,7 @@ def get_sales_stats(startdate, enddate):
         .annotate(total_sales=Sum("total_amount"))
         .order_by("-total_sales")
     )
-    cash_sales_revenue = Sales.objects.filter(
-        payment_status="completed",
-        payment_method="cash",
-        created_at__range=[startdate, enddate],
-    ).aggregate(total=Sum("total_amount"), count=Count("id"))
+
     total_profit = (
         SalesItem.objects.filter(created_at__range=[startdate, enddate])
         .annotate(
@@ -143,7 +139,7 @@ def get_sales_stats(startdate, enddate):
         Sales.objects.values("customer__name")
         .filter(payment_status="completed", created_at__range=[startdate, enddate])
         .annotate(total_orders=Count("id"), total_spent=Sum("total_amount"))
-        .order_by("-total_spent")[:3]
+        .order_by("-total_spent")[:5]
     )
     top_categories = (
         SalesItem.objects.values("product__category__name")
@@ -157,7 +153,6 @@ def get_sales_stats(startdate, enddate):
 
     return {
         "total_sales": total_sales["total"] or 0,
-        "cash_sales_revenue": cash_sales_revenue,
         "total_profit_amount": total_profit_amount,
         "highest_revenue_payment_method": list(highest_revenue_payment_method),
         "top_selling_products": list(top_selling_products),
@@ -196,6 +191,7 @@ def get_inventory_stats(startdate, enddate):
     ).aggregate(customer_count=Count("id"))
 
     return {
+        "total_products": total_products_count,
         "total_refunds": list(total_refunds),
         "total_low_supply_products": total_low_supply_products,
         "low_supply_percentage": low_supply_percentage,

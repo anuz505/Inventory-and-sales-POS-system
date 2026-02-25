@@ -4,12 +4,14 @@ from .serializers import (
     CategorySerializer,
     StockMovementSerializer,
 )
+
 from rest_framework import viewsets
 from .models import Category, Supplier, Product, StockMovement
 from rest_framework.permissions import AllowAny
 from rest_framework.pagination import LimitOffsetPagination
 from .filters import ProductFilter, SupplierFilter, StockMovementFilter
-import django_filters.rest_framework as filters
+from rest_framework.filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from sales.serializers import SalesSerializer
 from rest_framework.response import Response
@@ -27,8 +29,18 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]  # TODO remove this , only used for dev
     pagination_class = LimitOffsetPagination
-    filter_backends = [filters.DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = ProductFilter
+
+    ordering_fields = [
+        "name",
+        "sku",
+        "selling_price",
+        "cost_price",
+        "stock_quantity",
+        "created_at",
+    ]
+    ordering = ["-created_at"]
 
     @action(detail=True, methods=["get"])
     def sale(self, request, pk=None):
@@ -43,7 +55,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = [AllowAny]  # TODO remove this , only used for dev
-    filter_backends = [filters.DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = SupplierFilter
 
 
@@ -51,6 +63,6 @@ class StockMovementViewSet(viewsets.ModelViewSet):
     queryset = StockMovement.objects.all().prefetch_related("product", "sales", "user")
     serializer_class = StockMovementSerializer
     pagination_class = LimitOffsetPagination
-    filter_backends = [filters.DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = StockMovementFilter
     permission_classes = [AllowAny]  # TODO remove this , only used for dev
