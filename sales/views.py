@@ -7,6 +7,8 @@ from django.http import FileResponse
 from .invoice_generator import generate_invoice_pdf
 from rest_framework.pagination import LimitOffsetPagination
 import django_filters.rest_framework as filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
 from .filters import CustomerFilters, SalesFilters, SalesItemFilters
 from rest_framework.permissions import AllowAny
 
@@ -32,9 +34,11 @@ class SalesViewSet(viewsets.ModelViewSet):
     queryset = Sales.objects.all()
     serializer_class = SalesSerializer
     pagination_class = LimitOffsetPagination
-    filter_backends = [filters.DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = SalesFilters
     permission_classes = [AllowAny]  # TODO test permission class
+
+    ordering_fields = ["created_at", "invoice_number"]
 
     def get_queryset(self):
         """

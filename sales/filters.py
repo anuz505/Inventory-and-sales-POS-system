@@ -35,13 +35,6 @@ class SalesFilters(filters.FilterSet):
 
     # Filter by SalesItem properties
     product = filters.UUIDFilter(field_name="items__product_id", lookup_expr="exact")
-    ordering = filters.OrderingFilter(
-        fields=(
-            ("created_at", "date"),
-            ("total_amount", "total"),
-            ("invoice_number", "invoice"),
-        )
-    )
 
     class Meta:
         model = Sales

@@ -33,8 +33,8 @@ def get_data(startdate, model):
 def generate_csv(filename, model, startdate):
     raw_data = get_data(startdate, model)
     response = HttpResponse(content_type="text/csv")
+    response["Access-Control-Expose-Headers"] = "Content-Disposition"
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-
     writer = csv.writer(response)
     writer.writerow(raw_data["header"])
     for row in raw_data["rows"]:

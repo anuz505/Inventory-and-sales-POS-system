@@ -15,10 +15,13 @@ class CustomerSerialzer(serializers.ModelSerializer):
 
 
 class SalesItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+
     class Meta:
         model = SalesItem
         fields = "__all__"
         read_only_fields = ["id", "sale", "subtotal", "created_at"]
+        extra_fields = ["product_name"]
 
 
 class SalesSerializer(serializers.ModelSerializer):
