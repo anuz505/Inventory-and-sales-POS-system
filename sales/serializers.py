@@ -16,11 +16,14 @@ class CustomerSerialzer(serializers.ModelSerializer):
 
 class SalesItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
+    unit_price = serializers.DecimalField(
+        source="product.selling_price", max_digits=10, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = SalesItem
         fields = "__all__"
-        read_only_fields = ["id", "sale", "subtotal", "created_at"]
+        read_only_fields = ["id", "sale", "subtotal", "created_at", "selling_price"]
         extra_fields = ["product_name"]
 
 
@@ -54,7 +57,8 @@ class SalesSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             product = item_data["product"]
             quantity = item_data["quantity"]
-            unit_price = item_data["unit_price"]
+            # unit_price = item_data["unit_price"]
+            unit_price = product.selling_price
 
             # Lock product for update to prevent race conditions
             product = Product.objects.select_for_update().get(pk=product.pk)
@@ -67,7 +71,9 @@ class SalesSerializer(serializers.ModelSerializer):
                     f"Insufficient stock for {product.name}. Available: {product.stock_quantity}, Requested: {quantity}"
                 )
             # sales items create
-            SalesItem.objects.create(sale=sale, subtotal=item_subtotal, **item_data)
+            SalesItem.objects.create(
+                sale=sale, subtotal=item_subtotal, unit_price=unit_price, **item_data
+            )
 
             # deducting stock from the products table
             product.stock_quantity -= quantity
