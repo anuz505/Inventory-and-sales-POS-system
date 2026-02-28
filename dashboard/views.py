@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .stats import (
     get_customers_trend,
     get_inventory_stats,
@@ -19,7 +19,7 @@ from internship_task.logger import LoggerSetup
 
 class DashboardView(APIView):
     logger = LoggerSetup.setup_logger(__name__)
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
         self.logger.info("Dashboard info")
@@ -36,7 +36,7 @@ class DashboardView(APIView):
 
 
 class Trends(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
         start_date, end_date, _ = get_period_range_from_request(request)
@@ -47,7 +47,7 @@ class Trends(APIView):
 
 
 class RevenueProfitVis(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
         start_date, end_date, _ = get_period_range_from_request(request)
@@ -56,20 +56,25 @@ class RevenueProfitVis(APIView):
 
 
 class SalesReportView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
         start_date, end_date, _ = get_period_range_from_request(request)
         file_name = generate_filename("sales")
-        return generate_csv(filename=file_name, model=Sales, startdate=start_date)
+        return generate_csv(
+            filename=file_name, model=Sales, startdate=start_date, enddate=end_date
+        )
 
 
 class StockMovementView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
         start_date, end_date, _ = get_period_range_from_request(request)
         file_name = generate_filename("stockmovement")
         return generate_csv(
-            filename=file_name, model=StockMovement, startdate=start_date
+            filename=file_name,
+            model=StockMovement,
+            startdate=start_date,
+            enddate=end_date,
         )

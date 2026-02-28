@@ -7,7 +7,7 @@ from .serializers import (
 
 from rest_framework import viewsets
 from .models import Category, Supplier, Product, StockMovement
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.pagination import LimitOffsetPagination
 from .filters import ProductFilter, SupplierFilter, StockMovementFilter
 from rest_framework.filters import OrderingFilter
@@ -27,7 +27,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().prefetch_related("supplier", "category")
     serializer_class = ProductSerializer
-    permission_classes = [AllowAny]  # TODO remove this , only used for dev
+    permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = ProductFilter
@@ -54,7 +54,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [AllowAny]  # TODO remove this , only used for dev
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = SupplierFilter
 
@@ -65,4 +65,4 @@ class StockMovementViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = StockMovementFilter
-    permission_classes = [AllowAny]  # TODO remove this , only used for dev
+    permission_classes = [IsAuthenticated]

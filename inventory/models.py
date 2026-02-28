@@ -1,14 +1,15 @@
 from django.db import models
 import uuid
 from django.conf import settings
+from django.utils import timezone
 
 
 class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255, null=False)
     description = models.TextField(null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now())
+    updated_at = models.DateTimeField(default=timezone.now())
 
     class Meta:
         verbose_name_plural = "Categories"
@@ -23,8 +24,8 @@ class Supplier(models.Model):
     email = models.EmailField(max_length=255)
     phone = models.BigIntegerField()
     address = models.CharField(max_length=500)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now())
+    updated_at = models.DateTimeField(default=timezone.now())
 
     class Meta:
         verbose_name_plural = "Suppliers"
@@ -44,10 +45,8 @@ class Product(models.Model):
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     stock_quantity = models.IntegerField(default=0)
     low_stock_limit = models.IntegerField(default=10)
-    created_at = models.DateTimeField(
-        null=True, blank=True
-    )  # TODO remove null and blank after populating db
-    updated_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now())
+    updated_at = models.DateTimeField(default=timezone.now())
 
     class Meta:
         indexes = [
@@ -96,9 +95,7 @@ class StockMovement(models.Model):
         related_name="stock_movements",
     )
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(
-        blank=True, null=True
-    )  # TODO remove after populating db
+    created_at = models.DateTimeField(default=timezone.now())
 
     class Meta:
         indexes = [

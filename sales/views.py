@@ -10,7 +10,7 @@ import django_filters.rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from .filters import CustomerFilters, SalesFilters, SalesItemFilters
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
@@ -19,6 +19,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = CustomerFilters
+    permission_classes = [IsAuthenticated]
 
 
 class SalesItemViewSet(viewsets.ModelViewSet):
@@ -27,7 +28,7 @@ class SalesItemViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = SalesItemFilters
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
 
 class SalesViewSet(viewsets.ModelViewSet):
@@ -36,7 +37,7 @@ class SalesViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = SalesFilters
-    permission_classes = [AllowAny]  # TODO test permission class
+    permission_classes = [IsAuthenticated]
 
     ordering_fields = ["created_at", "invoice_number"]
 
