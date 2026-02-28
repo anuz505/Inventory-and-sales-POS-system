@@ -59,7 +59,7 @@ class SalesReportView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, format=None):
-        start_date, _ = get_period_range_from_request(request)
+        start_date, end_date, _ = get_period_range_from_request(request)
         file_name = generate_filename("sales")
         return generate_csv(filename=file_name, model=Sales, startdate=start_date)
 
