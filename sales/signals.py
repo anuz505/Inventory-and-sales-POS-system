@@ -7,38 +7,46 @@ from django.dispatch import receiver
 from .invoice_generator import generate_invoice_pdf
 
 
+def send_invoice_email_manually(instance):
+    """Reusable invoice sender — call from serializer when pending→completed."""
+    customer_email = instance.customer.email
+    subject = f"Invoice for Sale {instance.invoice_number}"
+    message = f"""
+Dear {instance.customer.name},
+
+Thank you for your purchase!
+
+Invoice Details:
+Invoice Number: {instance.invoice_number}
+Date: {instance.created_at.strftime("%Y-%m-%d")}
+Total Amount: ${instance.total_amount}
+
+Best regards,
+{instance.user.username}
+    """
+    pdf_buffer = generate_invoice_pdf(instance.id)
+
+    email = EmailMessage(
+        subject=subject,
+        body=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[customer_email],
+    )
+    email.attach(
+        f"invoice_{instance.invoice_number}.pdf",
+        pdf_buffer.getvalue(),
+        "application/pdf",
+    )
+    email.send(fail_silently=False)
+
+
 @receiver(post_save, sender=Sales)
 def send_invoice_email(sender, instance, created, **kwargs):
-    if created:
-        customer_email = instance.customer.email
-        subject = f"invoice for sale {instance.id}"
-        message = f"""
-        Dear {instance.customer.name},
-        
-        Thank you for your purchase!
-        
-        Invoice Details:
-        Sale ID: {instance.id}
-        Date: 
-        Total Amount: ${instance.total_amount}
-        
-        Best regards,
-        {instance.user.username}
-        """
-        pdf_buffer = generate_invoice_pdf(instance.id)
-
-        email = EmailMessage(
-            subject=subject,
-            body=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[customer_email],
-        )
-        email.attach(
-            f"invoice_{instance.invoice_number}.pdf",
-            pdf_buffer.getvalue(),
-            "application/pdf",
-        )
-        email.send(fail_silently=False)
+    if created and instance.payment_status == "completed":
+        send_invoice_email_manually(instance)
+        return
+    if getattr(instance, "_send_invoice_email", False):
+        send_invoice_email_manually(instance)
 
 
 @receiver(post_save, sender=SalesItem)

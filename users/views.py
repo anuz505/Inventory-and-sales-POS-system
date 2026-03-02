@@ -38,7 +38,7 @@ class LoginView(APIView):
             httponly=True,
             secure=True,
             samesite="lax",
-            max_age=70,  # TODO set the max age for 3600 again
+            max_age=3600,
         )
         response.set_cookie(
             key="refresh_token",
