@@ -61,7 +61,30 @@ services:
     networks:
       - inventory-sales-network
     restart: unless-stopped
-
+  celery_worker:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: inventory_sales_celery_worker
+    command: celery -A internship_task worker --loglevel=info --pool=solo
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: inventory-sales-db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 1
+      PYTHONUNBUFFERED: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - inventory-sales-network
+    restart: unless-stopped
 volumes:
   postgres_data:
     driver: local
