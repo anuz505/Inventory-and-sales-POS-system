@@ -17,6 +17,7 @@ class UserSerailizer(serializers.ModelSerializer):
             "phone_number",
             "date_joined",
             "is_active",
+            "is_staff",
         ]
         read_only_fields = ["id", "date_joined"]
 

@@ -10,7 +10,9 @@ import django_filters.rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from .filters import CustomerFilters, SalesFilters, SalesItemFilters
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
@@ -20,6 +22,10 @@ class CustomerViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = CustomerFilters
     permission_classes = [IsAuthenticated]
+
+    @method_decorator(cache_page(60 * 60 * 3, key_prefix="customers"))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class SalesItemViewSet(viewsets.ModelViewSet):

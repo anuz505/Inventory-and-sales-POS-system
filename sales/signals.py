@@ -2,9 +2,12 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from users.models import User
 from django.db.models.signals import post_save
-from .models import Sales, SalesItem
+from .models import Customer, Sales, SalesItem
 from django.dispatch import receiver
 from .invoice_generator import generate_invoice_pdf
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
+from django.core.cache import cache
 
 
 def send_invoice_email_manually(instance):
@@ -88,3 +91,8 @@ Hope you will restock soon. 😊
                 )
                 email.send(fail_silently=False)
                 print(f"Low stock email sent for {product.name}")
+
+
+@receiver([post_save, post_delete], sender=Customer)
+def invalidate_cache(sender, instance, **kwargs):
+    cache.delete_pattern("*customers*")

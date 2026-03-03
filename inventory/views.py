@@ -4,7 +4,8 @@ from .serializers import (
     CategorySerializer,
     StockMovementSerializer,
 )
-
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import viewsets
 from .models import Category, Supplier, Product, StockMovement
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -22,6 +23,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
+
+    @method_decorator(cache_page(60 * 60 * 2, key_prefix="categories"))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -42,6 +47,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     ]
     ordering = ["-created_at"]
 
+    @method_decorator(cache_page(60 * 60 * 3, key_prefix="products"))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
     @action(detail=True, methods=["get"])
     def sale(self, request, pk=None):
         product = self.get_object()
@@ -57,6 +66,10 @@ class SupplierViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = SupplierFilter
+
+    @method_decorator(cache_page(60 * 60 * 3, key_prefix="suppliers"))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class StockMovementViewSet(viewsets.ModelViewSet):
