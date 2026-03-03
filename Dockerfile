@@ -1,6 +1,6 @@
 FROM python:3.13  
 
-WORKDIR internship_task
+WORKDIR /internship_task
 
 # Prevents Python from writing pyc files to disk
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -18,6 +18,4 @@ COPY . /internship_task/
 
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-# CMD ["sh","entrypoint.sh"]
+CMD ["sh","entrypoint.sh"]

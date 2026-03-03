@@ -80,4 +80,3 @@ def send_low_stock_email(product_id: str):
                 #   # Send to all admins
             )
             email.send(fail_silently=False)
-            logger.info(f"low stock alert {product.id}")

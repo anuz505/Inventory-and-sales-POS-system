@@ -8,12 +8,14 @@ from sales.models import Customer, Sales, SalesItem
 from users.models import User
 
 
-def random_dt(year, month):
+def random_dt(year, month, max_day=None):
     """Return a random timezone-aware datetime within the given year/month."""
     if month == 12:
         days_in_month = (date(year + 1, 1, 1) - date(year, 12, 1)).days
     else:
         days_in_month = (date(year, month + 1, 1) - date(year, month, 1)).days
+    if max_day is not None:
+        days_in_month = min(days_in_month, max_day)
     return make_aware(
         datetime(
             year,
@@ -336,7 +338,7 @@ class Command(BaseCommand):
         ]
         self.stdout.write(self.style.SUCCESS(f"Created {len(customers)} customers"))
 
-        # ── SALES — ALL 12 MONTHS OF 2026 ───────────────────────────────────
+        # ── SALES — ALL MONTHS OF 2026 UP TO TODAY ──────────────────────────
         self.stdout.write("Creating 2026 sales...")
 
         payment_methods = ["cash", "card", "upi", "net_banking", "wallet"]
@@ -365,10 +367,12 @@ class Command(BaseCommand):
         }
 
         invoice_counter = 1
+        today = date.today()
 
-        for month in range(1, 13):
+        for month in range(1, today.month + 1):
+            max_day = today.day if month == today.month else None
             for _ in range(sales_per_month[month]):
-                sale_dt = random_dt(2026, month)
+                sale_dt = random_dt(2026, month, max_day=max_day)
 
                 # Step 1: create the sale row (created_at=None at this point)
                 sale = Sales.objects.create(

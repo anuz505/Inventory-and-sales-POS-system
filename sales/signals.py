@@ -20,8 +20,13 @@ def send_invoice_email(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=SalesItem)
 def send_low_stock_notification(sender, instance, created, **kwargs):
-    if created:
-        transaction.on_commit(lambda: send_low_stock_email.delay(instance.product.id))
+    if not created:
+        return
+
+    product = instance.product
+
+    if product.stock_quantity <= product.low_stock_limit:
+        transaction.on_commit(lambda: send_low_stock_email.delay(product.id))
 
 
 @receiver([post_save, post_delete], sender=Customer)

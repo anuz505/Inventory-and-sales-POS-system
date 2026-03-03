@@ -6,15 +6,15 @@ from .models import Category, Product, Supplier
 
 
 @receiver([post_save, post_delete], sender=Category)
-def invalidate_cache(sender, instance, **kwargs):
-    cache.delete_pattern("*categories*")
+def invalidate_category_cache(sender, instance, **kwargs):
+    cache.delete_pattern("*category*")
 
 
 @receiver([post_save, post_delete], sender=Product)
-def invalidate_cache(sender, instance, **kwargs):
+def invalidate_product_cache(sender, instance, **kwargs):
     cache.delete_pattern("*products*")
 
 
 @receiver([post_save, post_delete], sender=Supplier)
-def invalidate_cache(sender, instance, **kwargs):
+def invalidate_supplier_cache(sender, instance, **kwargs):
     cache.delete_pattern("*suppliers*")

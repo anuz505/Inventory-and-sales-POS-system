@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e
-echo "applying migartions"
-python manage.py makemigrations
+echo "applying migrations"
 python manage.py migrate
 
 echo "populating db"

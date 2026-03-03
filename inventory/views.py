@@ -24,7 +24,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
 
-    @method_decorator(cache_page(60 * 60 * 2, key_prefix="categories"))
+    @method_decorator(cache_page(60 * 60 * 2, key_prefix="category"))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
