@@ -15,11 +15,11 @@ def get_data(startdate, model, enddate=None):
         if field.concrete and not field.many_to_many
     ]
     if enddate:
-        query_set = model.objects.all().filter(
+        query_set = model.objects.filter(
             created_at__gte=startdate, created_at__lte=enddate
-        )
+        ).iterator()
     else:
-        query_set = model.objects.all().filter(created_at__gte=startdate)
+        query_set = model.objects.filter(created_at__gte=startdate).iterator()
     rows = []
     for obj in query_set:
         row = []
