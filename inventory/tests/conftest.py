@@ -1,7 +1,5 @@
 import pytest
 from .factories import (
-    UserFactory,
-    AdminUserFactory,
     CategoryFactory,
     ProductFactory,
     StockMovementFactory,
