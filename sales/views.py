@@ -74,18 +74,9 @@ class SalesViewSet(viewsets.ModelViewSet):
         Download PDF invoice for a sale.
         GET /api-sales/sales/{id}/download-invoice/
         """
+        sale = self.get_object()  # raises HTTP 404 automatically if not found
         try:
-            sale = self.get_object()
             pdf_buffer = generate_invoice_pdf(sale.id)
-
-            filename = f"invoice_{sale.invoice_number}.pdf"
-
-            return FileResponse(
-                pdf_buffer,
-                as_attachment=True,
-                filename=filename,
-                content_type="application/pdf",
-            )
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -93,3 +84,11 @@ class SalesViewSet(viewsets.ModelViewSet):
                 {"error": f"Error generating invoice: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+        filename = f"invoice_{sale.invoice_number}.pdf"
+        return FileResponse(
+            pdf_buffer,
+            as_attachment=True,
+            filename=filename,
+            content_type="application/pdf",
+        )
