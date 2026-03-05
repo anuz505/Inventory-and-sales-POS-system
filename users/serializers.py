@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import User
+from .models import PasswordResetOTP, User
 from django.contrib.auth import authenticate
+from django.utils import timezone
 
 
 class UserSerailizer(serializers.ModelSerializer):
@@ -104,3 +105,52 @@ class ChangePasswordSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise serializers.ValidationError("old password is incorrect")
         return value
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_new_password(self, value):
+        errors = []
+        if not any(char.isdigit() for char in value):
+            errors.append("Password must contain at least one number.")
+        if not any(char.isupper() for char in value):
+            errors.append("Password must contain at least one uppercase letter.")
+        if not any(char.islower() for char in value):
+            errors.append("Password must contain at least one lowercase letter.")
+        if not any(not char.isalnum() for char in value):
+            errors.append("Password must contain at least one special character.")
+        if errors:
+            raise serializers.ValidationError(errors)
+        return value
+
+    def validate(self, data):
+        try:
+            user = User.objects.get(email=data["email"])
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                {"email": "No user found with this email."}
+            )
+
+        otp_record = (
+            PasswordResetOTP.objects.filter(user=user, otp=data["otp"])
+            .order_by("-created_at")
+            .first()
+        )
+
+        if not otp_record:
+            raise serializers.ValidationError({"otp": "Invalid OTP."})
+        if otp_record.expired_at < timezone.now():
+            raise serializers.ValidationError({"otp": "OTP has expired."})
+
+        data["user"] = user
+        data["otp_record"] = otp_record
+        return data
+
+    def save(self):
+        user = self.validated_data["user"]
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+        self.validated_data["otp_record"].delete()

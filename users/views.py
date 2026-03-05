@@ -4,8 +4,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from users.tasks import send_otp_via_email
 from .models import User
 from .serializers import (
+    ResetPasswordSerializer,
     UserSerailizer,
     UserCreateSerializer,
     LoginSerializer,
@@ -149,6 +152,34 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(
             {"detail": "Password changed successfully"}, status=status.HTTP_200_OK
         )
+
+
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+
+        try:
+            user = User.objects.get(email=email)
+        except Exception as error:
+            return Response(
+                {"detail": "User does not exist withh this email"}, status=404
+            )
+        send_otp_via_email.delay(user.id)
+        return Response(
+            {"detail": "OTP has been sent to the user"}, status=status.HTTP_200_OK
+        )
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Password Reset Successfully"})
 
 
 class AuthCheckView(APIView):

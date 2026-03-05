@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from .stats import (
     get_customers_trend,
     get_inventory_stats,
