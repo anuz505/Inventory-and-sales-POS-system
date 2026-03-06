@@ -7,4 +7,10 @@ echo "populating db"
 python manage.py populate_db
 
 echo "starting server"
-python manage.py runserver 0.0.0.0:8000
+echo "Starting server..."
+exec gunicorn internship_task.wsgi:application \
+    --bind 0.0.0.0:8000 \
+    --workers 3 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile -
