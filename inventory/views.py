@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework import viewsets
 from .models import Category, Supplier, Product, StockMovement
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import LimitOffsetPagination
 from .filters import ProductFilter, SupplierFilter, StockMovementFilter
 from rest_framework.filters import OrderingFilter

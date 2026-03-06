@@ -7,6 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1
 #Prevents Python from buffering stdout and stderr
 ENV PYTHONUNBUFFERED=1 
  
+# Install curl for Docker healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 # Upgrade pip
 RUN pip install --upgrade pip 
 
