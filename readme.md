@@ -10,6 +10,8 @@ Django REST API for managing inventory, sales, customers, suppliers, and analyti
 - **PostgreSQL** — primary database
 - **Redis** — cache + Celery broker
 - **Celery** — async background tasks
+- **Gunicorn** — WSGI application server
+- **Nginx** — reverse proxy + static/media file serving
 - **Docker / Docker Compose**
 
 ---
@@ -60,6 +62,12 @@ sequenceDiagram
 ---
 
 ## API Endpoints
+
+### Core (`/api/`)
+
+| Method | Endpoint       | Description                                     |
+| ------ | -------------- | ----------------------------------------------- |
+| GET    | `/api/health/` | Health check — verifies DB + Redis connectivity |
 
 ### Auth (`/api/`)
 
@@ -167,12 +175,63 @@ docker compose exec backend python manage.py populate_db
 
 ### Services
 
-| Service         | Description                        |
-| --------------- | ---------------------------------- |
-| `postgres`      | PostgreSQL 15 database             |
-| `redis`         | Redis 7 — cache and Celery broker  |
-| `backend`       | Django API server                  |
-| `celery_worker` | Celery worker for background tasks |
+| Service         | Description                                        |
+| --------------- | -------------------------------------------------- |
+| `postgres`      | PostgreSQL 15 database                             |
+| `redis`         | Redis 7 — cache and Celery broker                  |
+| `backend`       | Gunicorn WSGI server running the Django app        |
+| `nginx`         | Reverse proxy, rate limiting, static/media serving |
+| `celery_worker` | Celery worker for background tasks                 |
+
+---
+
+## Gunicorn
+
+The Django app is served by **Gunicorn** (WSGI), configured in `entrypoint.sh`:
+
+```sh
+gunicorn internship_task.wsgi:application \
+    --bind 0.0.0.0:8000 \
+    --workers 3 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile -
+```
+
+- **3 workers** handle concurrent requests
+- **120s timeout** covers long-running PDF generation and email tasks
+- Logs are sent to stdout/stderr so Docker captures them
+
+---
+
+## Nginx
+
+Nginx sits in front of Gunicorn as a reverse proxy, defined in `nginx/nginx.conf`.
+
+- Proxies all requests to the `backend` upstream (Gunicorn on port 8000)
+- Serves `/static/` and `/media/` files directly from mounted volumes — bypassing Django entirely
+- Applies **rate limiting**: 10 requests/second per IP with a burst of 20 (`limit_req_zone`)
+
+```
+Client → Nginx :80 → Gunicorn :8000 → Django
+                ↘ /static/, /media/ served directly
+```
+
+---
+
+## Health Check
+
+`GET /api/health/` — public endpoint, no auth required.
+
+Verifies that both **PostgreSQL** and **Redis** are reachable:
+
+```json
+{ "status": "ok" }
+```
+
+Returns `500` with `{ "status": "error" }` if either connection fails.
+
+This endpoint is also used by Docker Compose as the `healthcheck` for the `backend` service, so `nginx` and `celery_worker` only start once the app is fully ready.
 
 ---
 
