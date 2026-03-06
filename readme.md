@@ -63,13 +63,15 @@ sequenceDiagram
 
 ### Auth (`/api/`)
 
-| Method | Endpoint           | Description                           |
-| ------ | ------------------ | ------------------------------------- |
-| POST   | `/api/login/`      | Login, returns JWT in HttpOnly cookie |
-| POST   | `/api/logout/`     | Logout, clears cookies                |
-| POST   | `/api/refresh/`    | Refresh access token                  |
-| GET    | `/api/check-auth/` | Verify authentication status          |
-| GET    | `/api/users/`      | List / manage users                   |
+| Method | Endpoint               | Description                           |
+| ------ | ---------------------- | ------------------------------------- |
+| POST   | `/api/login/`          | Login, returns JWT in HttpOnly cookie |
+| POST   | `/api/logout/`         | Logout, clears cookies                |
+| POST   | `/api/refresh/`        | Refresh access token                  |
+| GET    | `/api/check-auth/`     | Verify authentication status          |
+| GET    | `/api/users/`          | List / manage users                   |
+| POST   | `/api/forgot-password` | Send OTP to registered email          |
+| POST   | `/api/reset-password`  | Verify OTP and set new password       |
 
 ### Inventory (`/api-inventory/`)
 
@@ -119,6 +121,7 @@ Celery runs as a separate worker service using Redis as the broker.
 | ----------------------------- | -------------------------------- | ------------------------------------------------------------- |
 | `send_invoice_email_manually` | Sale created or marked completed | Generates a PDF invoice and emails it to the customer         |
 | `send_low_stock_email`        | Sale item created                | Checks if stock is below threshold and emails all admin users |
+| `send_otp_via_email`          | Forgot-password requested        | Generates a 6-digit OTP, stores it (10-min TTL), emails user  |
 
 ### Why Celery?
 
@@ -192,6 +195,34 @@ EMAIL_HOST_USER=
 EMAIL_HOST_PASSWORD=
 DEFAULT_FROM_EMAIL=
 ```
+
+---
+
+## Password Reset Flow
+
+Password reset uses a 2-step OTP-based process:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Django
+    participant Celery
+    participant SMTP
+
+    User->>Django: POST /api/forgot-password { email }
+    Django->>Celery: dispatch send_otp_via_email(user_id)
+    Django-->>User: 200 { detail: "OTP has been sent" }
+    Celery->>SMTP: Send email with 6-digit OTP
+    User->>Django: POST /api/reset-password { email, otp, new_password }
+    Django-->>User: 200 { detail: "Password Reset Successfully" }
+```
+
+### Rules
+
+- OTP is **6 digits**, generated randomly and stored in `PasswordResetOTP` table.
+- OTP expires after **10 minutes**.
+- After a successful reset the OTP record is deleted.
+- Password requirements: min 8 chars, must contain uppercase, lowercase, digit, and special character.
 
 ---
 

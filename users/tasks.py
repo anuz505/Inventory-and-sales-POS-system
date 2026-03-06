@@ -29,8 +29,7 @@ def send_otp_via_email(user_id):
 
             Best regards,
             The Support Team
-            {user.email}
-            {otp}
+            {settings.DEFAULT_FROM_EMAIL}
             """
     PasswordResetOTP.objects.create(
         user=user, otp=otp, expired_at=timezone.now() + timedelta(minutes=10)

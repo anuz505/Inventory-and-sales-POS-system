@@ -162,10 +162,8 @@ class ForgotPasswordView(APIView):
 
         try:
             user = User.objects.get(email=email)
-        except Exception as error:
-            return Response(
-                {"detail": "User does not exist withh this email"}, status=404
-            )
+        except User.DoesNotExist:
+            return Response({"detail": "No user found with this email."}, status=404)
         send_otp_via_email.delay(user.id)
         return Response(
             {"detail": "OTP has been sent to the user"}, status=status.HTTP_200_OK
