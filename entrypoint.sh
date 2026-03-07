@@ -1,4 +1,5 @@
 #!/bin/sh
+apt-get update && apt-get install -y curl
 set -e
 echo "applying migrations"
 python manage.py migrate
