@@ -64,12 +64,12 @@ services:
     networks:
       - inventory-sales-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
+    #   interval: 15s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 60s
 
   nginx:
     image: nginx:latest
