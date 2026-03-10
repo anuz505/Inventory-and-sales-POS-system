@@ -1,43 +1,45 @@
 pipeline{
     agent any
-        stages{
-            stage("Git clone "){
-                steps{
-                    bat "git clone https://github.com/anuz505/Inventory-and-sales-POS-system.git"
-                }
-            }
-            stage("Depenedencies installation"){
 
+    stages{
+
+        stage("Checkout"){
+            steps{
+                git branch:"main", url: 'https://github.com/anuz505/Inventory-and-sales-POS-system.git'
+            }
+        }
+
+        stage("Setup Python"){
             steps{
                 bat """
                 python -m venv myvenv
-                call myvenv\\Scripts\\activate
-                python -m pip install --upgrade pip
-                pip install -r Inventory-and-sales-POS-system/requirements.txt
+                myvenv\\Scripts\\python -m pip install --upgrade pip
+                myvenv\\Scripts\\pip install -r requirements.txt
                 """
-            }       
-            }
-        
-        stage("Unit test"){
-            steps{
-            echo("Docker compose ")
-            bat """
-            cd Inventory-and-sales-POS-system
-            docker compose up -d --build 
-
-            """
-            echo("Running pytest")
-                bat """
-                    call myvenv\\Scripts\\activate
-                    set DJANGO_SETTINGS_MODULE=internship_task.test_settings
-                    python manage.py migrate
-                    pytest --cov=. --cov-report=xml:coverage.xml ^
-                    --cov-report=html:htmlcov ^
-                    --junitxml=test-results.xml -v ^
-                    --tb=short
-                    """
             }
         }
-    
+
+        stage("Start Services"){
+            steps{
+                bat """
+                docker compose up -d --build
+                timeout /t 30
+                """
+            }
+        }
+
+        stage("Run Tests"){
+            steps{
+                bat """
+                myvenv\\Scripts\\pytest --cov=. ^
+                set DJANGO_SETTINGS_MODULE=internship_task.test_settings
+                --cov-report=xml ^
+                --cov-report=html ^
+                --junitxml=test-results.xml ^
+                -v
+                """
+            }
+        }
+
     }
-}        
+}
