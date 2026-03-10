@@ -1,17 +1,13 @@
 pipeline{
     agent any
+        stages{
+            stage("Git clone "){
+                steps{
+                    bat "git clone https://github.com/anuz505/Inventory-and-sales-POS-system.git"
+                }
+            }
+            stage("Depenedencies installation"){
 
-            steps{
-                echo("Running pytest")
-                bat """
-                    call myvenv\Scripts\activate
-                    cd Inventory-and-sales-POS-system
-                    set DJANGO_SETTINGS_MODULE=internship_task.test_settings
-                    pytest --cov=. --cov-report=xml:coverage.xml ^
-                    --cov-report=html:htmlcov ^
-                    --junitxml=test-results.xml -v ^
-                    --tb=short
-                    """
             steps{
                 bat """
                 python -m venv myvenv
@@ -19,14 +15,15 @@ pipeline{
                 pip install --upgrade pip 
                 pip install -r Inventory-and-sales-POS-system/requirements.txt
                 """
+            }       
             }
-        }
         stage("Unit test"){
             steps{
-                echo("Running pytest")
+            echo("Running pytest")
                 bat """
                     call myvenv\\Scripts\\activate
                     cd Inventory-and-sales-POS-system
+                    set DJANGO_SETTINGS_MODULE=internship_task.test_settings
                     pytest --cov=. --cov-report=xml:coverage.xml ^
                     --cov-report=html:htmlcov ^
                     --junitxml=test-results.xml -v ^
@@ -36,4 +33,4 @@ pipeline{
         }
     
     }
-}
+}        
