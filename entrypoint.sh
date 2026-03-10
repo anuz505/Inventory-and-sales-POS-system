@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+# set -e
 echo "applying migrations"
 python manage.py migrate
 

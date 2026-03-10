@@ -17,12 +17,18 @@ pipeline{
                 """
             }       
             }
+        
         stage("Unit test"){
             steps{
+            echo("Docker compose ")
+            bat """
+            cd Inventory-and-sales-POS-system
+            docker compose up -d --build 
+
+            """
             echo("Running pytest")
                 bat """
                     call myvenv\\Scripts\\activate
-                    cd Inventory-and-sales-POS-system
                     set DJANGO_SETTINGS_MODULE=internship_task.test_settings
                     python manage.py migrate
                     pytest --cov=. --cov-report=xml:coverage.xml ^
