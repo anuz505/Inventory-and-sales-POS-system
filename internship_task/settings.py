@@ -92,9 +92,9 @@ WSGI_APPLICATION = "internship_task.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "your_db_name"),
-        "USER": os.environ.get("POSTGRES_USER", "your_db_user"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "your_db_password"),
+        "NAME": os.environ.get("POSTGRES_DB", "postgres"),
+        "USER": os.environ.get("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "root"),
         "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }

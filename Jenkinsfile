@@ -12,7 +12,7 @@ pipeline{
                 bat """
                 python -m venv myvenv
                 call myvenv\\Scripts\\activate
-                pip install --upgrade pip 
+                python -m pip install --upgrade pip
                 pip install -r Inventory-and-sales-POS-system/requirements.txt
                 """
             }       
@@ -24,6 +24,7 @@ pipeline{
                     call myvenv\\Scripts\\activate
                     cd Inventory-and-sales-POS-system
                     set DJANGO_SETTINGS_MODULE=internship_task.test_settings
+                    python manage.py migrate
                     pytest --cov=. --cov-report=xml:coverage.xml ^
                     --cov-report=html:htmlcov ^
                     --junitxml=test-results.xml -v ^
