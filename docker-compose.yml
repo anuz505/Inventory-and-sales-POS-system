@@ -56,7 +56,7 @@ services:
       REDIS_PORT: 6379
       REDIS_DB: 1
       PYTHONUNBUFFERED: 1
-      SECRET_KEY: ${SECRET_KEY}
+      # SECRET_KEY: ${SECRET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
