@@ -1,9 +1,10 @@
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .stats import periods
+
 
 
 def get_start_date(period: str):
+    from .stats import periods
     now = timezone.now()
     if period == "month":
         start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
