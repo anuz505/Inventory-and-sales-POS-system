@@ -109,7 +109,7 @@ class SalesSerializer(serializers.ModelSerializer):
 
         # --- Status transition guards ---
         if old_status == "refunded":
-            raise serializers.ValidationError("Refunded cannot be modified")
+            raise serializers.ValidationError("Refunded sales cannot be modified")
 
         if old_status == "completed":
             client_keys = {k for k in validated_data.keys() if k != "user"}
@@ -154,7 +154,7 @@ class SalesSerializer(serializers.ModelSerializer):
         discount = instance.discount_amount or Decimal("0.00")
         if discount > instance.subtotal:
             raise serializers.ValidationError(
-                f"Discount ({discount}) cannot exceed ({instance.subtotal})"
+                f"Discount ({discount}) cannot exceed subtotal ({instance.subtotal})"
             )
         instance.total_amount = instance.subtotal - discount
 

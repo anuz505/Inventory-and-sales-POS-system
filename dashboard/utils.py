@@ -1,10 +1,16 @@
 from django.utils import timezone
 from datetime import datetime, timedelta
 
+PERIODS = {
+    "month": "month",
+    "3months": "3months",
+    "year": "year",
+    "today": "today",
+    "12months": "12months",
+}
 
 
 def get_start_date(period: str):
-    from .stats import periods
     now = timezone.now()
     if period == "month":
         start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -48,7 +54,7 @@ def get_period_range_from_request(request):
     to_date = request.query_params.get("to")
 
     if period:
-        mapped_period = periods.get(period)
+        mapped_period = PERIODS.get(period)
         start_date, end_date = get_start_date(mapped_period)
         return start_date, end_date, period
 

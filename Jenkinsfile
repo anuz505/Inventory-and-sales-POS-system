@@ -27,18 +27,6 @@ pipeline{
                 sleep(time: 30, unit: 'SECONDS')
             }
         }
-
-        stage("Run Tests"){
-            steps{
-                bat """
-                myvenv\\Scripts\\pytest --cov=. ^
-                --cov-report=xml ^
-                --cov-report=html ^
-                --junitxml=test-results.xml ^
-                -v
-                """
-            }
-        }
         stage("Lint Code"){
             steps{
                 bat """
@@ -53,6 +41,18 @@ pipeline{
                     """
             }
         }
+        stage("Run Tests"){
+            steps{
+                bat """
+                myvenv\\Scripts\\pytest --cov=. ^
+                --cov-report=xml ^
+                --cov-report=html ^
+                --junitxml=test-results.xml ^
+                -v
+                """
+            }
+        }
+       
 
     }
 }
