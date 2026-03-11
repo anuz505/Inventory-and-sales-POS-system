@@ -36,9 +36,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         write_only=True,
         min_length=8,
         style={"input_type": "password"},
-        error_messages={
-            "min_length": "Password must be at least 8 characters long."
-        },
+        error_messages={"min_length": "Password must be at least 8 characters long."},
     )
 
     class Meta:
@@ -58,9 +56,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                "This email is already registered."
-            )
+            raise serializers.ValidationError("This email is already registered.")
         return value
 
     def validate_new_password(self, value):
@@ -70,17 +66,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if not any(char.isdigit() for char in value):
             errors.append("Password must contain at least one number.")
         if not any(char.isupper() for char in value):
-            errors.append(
-                "Password must contain at least one uppercase letter."
-            )
+            errors.append("Password must contain at least one uppercase letter.")
         if not any(char.islower() for char in value):
-            errors.append(
-                "Password must contain at least one lowercase letter."
-            )
+            errors.append("Password must contain at least one lowercase letter.")
         if not any(not char.isalnum() for char in value):
-            errors.append(
-                "Password must contain at least one special character."
-            )
+            errors.append("Password must contain at least one special character.")
         if errors:
             raise serializers.ValidationError(errors)
         return value
@@ -88,16 +78,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
-    password = serializers.CharField(
-        write_only=True,
-        style={"input_type": "password"}
-    )
+    password = serializers.CharField(write_only=True, style={"input_type": "password"})
 
     def validate(self, data):
-        user = authenticate(
-            username=data["username"],
-            password=data["password"]
-        )
+        user = authenticate(username=data["username"], password=data["password"])
         if not user:
             raise serializers.ValidationError(
                 {"non_field_errors": ["Invalid username or password."]}
@@ -114,11 +98,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     """For changing password"""
 
     old_password = serializers.CharField(required=True, write_only=True)
-    new_password = serializers.CharField(
-        required=True,
-        write_only=True,
-        min_length=8
-    )
+    new_password = serializers.CharField(required=True, write_only=True, min_length=8)
 
     def validate_old_password(self, value):
         user = self.context["request"].user
@@ -137,17 +117,11 @@ class ResetPasswordSerializer(serializers.Serializer):
         if not any(char.isdigit() for char in value):
             errors.append("Password must contain at least one number.")
         if not any(char.isupper() for char in value):
-            errors.append(
-                "Password must contain at least one uppercase letter."
-            )
+            errors.append("Password must contain at least one uppercase letter.")
         if not any(char.islower() for char in value):
-            errors.append(
-                "Password must contain at least one lowercase letter."
-            )
+            errors.append("Password must contain at least one lowercase letter.")
         if not any(not char.isalnum() for char in value):
-            errors.append(
-                "Password must contain at least one special character."
-            )
+            errors.append("Password must contain at least one special character.")
         if errors:
             raise serializers.ValidationError(errors)
         return value

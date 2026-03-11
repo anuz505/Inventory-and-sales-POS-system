@@ -5,10 +5,8 @@ from .models import Product, Supplier, Category, StockMovement
 
 class CategoryFilter(filters.FilterSet):
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
-    created_after = filters.DateFilter(field_name="created_at",
-                                       lookup_expr="gte")
-    created_before = filters.DateFilter(field_name="created_at",
-                                        lookup_expr="lte")
+    created_after = filters.DateFilter(field_name="created_at", lookup_expr="gte")
+    created_before = filters.DateFilter(field_name="created_at", lookup_expr="lte")
 
     class Meta:
         model = Category
@@ -20,8 +18,7 @@ class ProductFilter(filters.FilterSet):
 
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     sku = filters.CharFilter(field_name="sku", lookup_expr="icontains")
-    description = filters.CharFilter(field_name="description",
-                                     lookup_expr="icontains")
+    description = filters.CharFilter(field_name="description", lookup_expr="icontains")
 
     category = filters.UUIDFilter(field_name="category")
 
@@ -33,21 +30,15 @@ class ProductFilter(filters.FilterSet):
     max_selling_price = filters.NumberFilter(
         field_name="selling_price", lookup_expr="lte"
     )
-    min_cost_price = filters.NumberFilter(field_name="cost_price",
-                                          lookup_expr="gte")
-    max_cost_price = filters.NumberFilter(field_name="cost_price",
-                                          lookup_expr="lte")
+    min_cost_price = filters.NumberFilter(field_name="cost_price", lookup_expr="gte")
+    max_cost_price = filters.NumberFilter(field_name="cost_price", lookup_expr="lte")
 
-    min_stock = filters.NumberFilter(field_name="stock_quantity",
-                                     lookup_expr="gte")
-    max_stock = filters.NumberFilter(field_name="stock_quantity",
-                                     lookup_expr="lte")
+    min_stock = filters.NumberFilter(field_name="stock_quantity", lookup_expr="gte")
+    max_stock = filters.NumberFilter(field_name="stock_quantity", lookup_expr="lte")
     low_stock = filters.BooleanFilter(method="filter_low_stock")
 
-    created_after = filters.DateFilter(field_name="created_at",
-                                       lookup_expr="gte")
-    created_before = filters.DateFilter(field_name="created_at",
-                                        lookup_expr="lte")
+    created_after = filters.DateFilter(field_name="created_at", lookup_expr="gte")
+    created_before = filters.DateFilter(field_name="created_at", lookup_expr="lte")
 
     def filter_low_stock(self, query_set, name, value):
         if value:
@@ -69,10 +60,8 @@ class SupplierFilter(filters.FilterSet):
     email = filters.CharFilter(field_name="email", lookup_expr="icontains")
     phone = filters.CharFilter(field_name="phone", lookup_expr="icontains")
     address = filters.CharFilter(field_name="address", lookup_expr="icontains")
-    created_after = filters.DateFilter(field_name="created_at",
-                                       lookup_expr="gte")
-    created_before = filters.DateFilter(field_name="created_at",
-                                        lookup_expr="lte")
+    created_after = filters.DateFilter(field_name="created_at", lookup_expr="gte")
+    created_before = filters.DateFilter(field_name="created_at", lookup_expr="lte")
 
     class Meta:
         model = Supplier
@@ -85,12 +74,9 @@ class StockMovementFilter(filters.FilterSet):
     product_name = filters.CharFilter(
         field_name="product__name", lookup_expr="icontains"
     )
-    product_sku = filters.CharFilter(field_name="product__sku",
-                                     lookup_expr="icontains")
+    product_sku = filters.CharFilter(field_name="product__sku", lookup_expr="icontains")
 
-    movement_type = filters.ChoiceFilter(
-        choices=StockMovement.MOVEMENT_TYPE_CHOICES
-        )
+    movement_type = filters.ChoiceFilter(choices=StockMovement.MOVEMENT_TYPE_CHOICES)
     reason = filters.ChoiceFilter(choices=StockMovement.REASON_CHOICES)
 
     # User filter
@@ -100,16 +86,12 @@ class StockMovementFilter(filters.FilterSet):
     sales = filters.UUIDFilter(field_name="sales")
 
     # Quantity range
-    min_quantity = filters.NumberFilter(field_name="quantity",
-                                        lookup_expr="gte")
-    max_quantity = filters.NumberFilter(field_name="quantity",
-                                        lookup_expr="lte")
+    min_quantity = filters.NumberFilter(field_name="quantity", lookup_expr="gte")
+    max_quantity = filters.NumberFilter(field_name="quantity", lookup_expr="lte")
 
     # Date filters
-    created_after = filters.DateFilter(field_name="created_at",
-                                       lookup_expr="gte")
-    created_before = filters.DateFilter(field_name="created_at",
-                                        lookup_expr="lte")
+    created_after = filters.DateFilter(field_name="created_at", lookup_expr="gte")
+    created_before = filters.DateFilter(field_name="created_at", lookup_expr="lte")
 
     # Ordering
     ordering = filters.OrderingFilter(

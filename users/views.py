@@ -69,11 +69,7 @@ class RefreshTokenView(APIView):
                 refresh = RefreshToken(refresh_token)
             except Exception as error:
                 return Response(
-                    {
-                        "detail": (
-                            f"Invalid or expired refresh token: {str(error)}"
-                        )
-                    },
+                    {"detail": (f"Invalid or expired refresh token: {str(error)}")},
                     status=401,
                 )
             access_token = str(refresh.access_token)
@@ -107,16 +103,14 @@ class LogoutView(APIView):
                 token = RefreshToken(refresh_token)
                 token.blacklist()
             response = Response(
-                {"detail": "successfully logged out"},
-                status=status.HTTP_200_OK
+                {"detail": "successfully logged out"}, status=status.HTTP_200_OK
             )
             response.delete_cookie("access_token")
             response.delete_cookie("refresh_token")
             return response
         except Exception:
             response = Response(
-                {"detail": "Invalid token"},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
             )
             response.delete_cookie("access_token")
             response.delete_cookie("refresh_token")
@@ -141,20 +135,12 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             return [IsAuthenticated()]
 
-    @action(
-        detail=False,
-        methods=["get"],
-        permission_classes=[IsAuthenticated]
-    )
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @action(
-        detail=False,
-        methods=["post"],
-        permission_classes=[IsAuthenticated]
-    )
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def change_password(self, request):
         serializer = ChangePasswordSerializer(
             data=request.data, context={"request": request}
@@ -164,8 +150,7 @@ class UserViewSet(viewsets.ModelViewSet):
         request.user.save()
 
         return Response(
-            {"detail": "Password changed successfully"},
-            status=status.HTTP_200_OK
+            {"detail": "Password changed successfully"}, status=status.HTTP_200_OK
         )
 
 
@@ -178,14 +163,10 @@ class ForgotPasswordView(APIView):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response(
-                {"detail": "No user found with this email."},
-                status=404
-            )
+            return Response({"detail": "No user found with this email."}, status=404)
         send_otp_via_email.delay(user.id)
         return Response(
-            {"detail": "OTP has been sent to the user"},
-            status=status.HTTP_200_OK
+            {"detail": "OTP has been sent to the user"}, status=status.HTTP_200_OK
         )
 
 

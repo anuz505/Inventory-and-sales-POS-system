@@ -39,6 +39,20 @@ pipeline{
                 """
             }
         }
+        stage("Lint Code"){
+            steps{
+                bat """
+                    myvenv\\Scripts\\flake8
+                    """
+            }
+        }
+        stage("Format Code"){
+            steps{
+                bat """
+                    myvenv\\Scripts\\black --check .
+                    """
+            }
+        }
 
     }
 }

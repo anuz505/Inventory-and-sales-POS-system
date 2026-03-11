@@ -9,14 +9,10 @@ from .tasks import send_invoice_email_manually, send_low_stock_email
 @receiver(post_save, sender=Sales)
 def send_invoice_email(sender, instance, created, **kwargs):
     if created and instance.payment_status == "completed":
-        transaction.on_commit(
-            lambda: send_invoice_email_manually.delay(instance.id)
-        )
+        transaction.on_commit(lambda: send_invoice_email_manually.delay(instance.id))
         return
     if getattr(instance, "_send_invoice_email", False):
-        transaction.on_commit(
-            lambda: send_invoice_email_manually.delay(instance.id)
-        )
+        transaction.on_commit(lambda: send_invoice_email_manually.delay(instance.id))
 
 
 @receiver(post_save, sender=SalesItem)

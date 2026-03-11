@@ -14,8 +14,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
-    list_display = ["name", "email", "phone",
-                    "address", "created_at", "updated_at"]
+    list_display = ["name", "email", "phone", "address", "created_at", "updated_at"]
     search_fields = ["name", "email", "phone"]
     list_filter = ["created_at"]
     readonly_fields = ["id", "created_at", "updated_at"]
@@ -61,8 +60,7 @@ class ProductAdmin(admin.ModelAdmin):
     def low_stock_alert(self, obj):
         if obj.stock_quantity <= obj.low_stock_limit:
             return format_html(
-                '<span style="color: {}; font-weight: bold;">Low Stock</span>',
-                "red"
+                '<span style="color: {}; font-weight: bold;">Low Stock</span>', "red"
             )
         return format_html(
             '<span style="color: {}; font-weight: bold;">OK</span>', "green"

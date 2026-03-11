@@ -18,8 +18,7 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("refresh/", RefreshTokenView.as_view(), name="refresh_token"),
     path("check-auth/", AuthCheckView.as_view(), name="check auth"),
-    path("forgot-password", ForgotPasswordView.as_view(),
-         name="forgot-password"),
+    path("forgot-password", ForgotPasswordView.as_view(), name="forgot-password"),
     path("reset-password", ResetPasswordView.as_view(), name="forgot-password"),
     path("", include(router.urls)),
 ]

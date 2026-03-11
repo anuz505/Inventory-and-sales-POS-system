@@ -73,9 +73,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
 
 
 class StockMovementViewSet(viewsets.ModelViewSet):
-    queryset = StockMovement.objects.all().prefetch_related(
-        "product", "sales", "user"
-    )
+    queryset = StockMovement.objects.all().prefetch_related("product", "sales", "user")
     serializer_class = StockMovementSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]

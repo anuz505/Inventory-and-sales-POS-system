@@ -25,14 +25,8 @@ class SupplierSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(
-        source="category.name",
-        read_only=True
-    )
-    supplier_name = serializers.CharField(
-        source="supplier.name",
-        read_only=True
-    )
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    supplier_name = serializers.CharField(source="supplier.name", read_only=True)
 
     class Meta:
         model = Product

@@ -1,4 +1,4 @@
-from .serializers import CustomerSerialzer, SalesItemSerializer, SalesSerializer # noqa
+from .serializers import CustomerSerialzer, SalesItemSerializer, SalesSerializer  # noqa
 from .models import Customer, SalesItem, Sales
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -78,8 +78,7 @@ class SalesViewSet(viewsets.ModelViewSet):
         try:
             pdf_buffer = generate_invoice_pdf(sale.id)
         except ValueError as e:
-            return Response({"error": str(e)},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response(
                 {"error": f"Error generating invoice: {str(e)}"},

@@ -14,7 +14,6 @@ urlpatterns = [
     path("trends/", Trends.as_view(), name="salesTrend"),
     path("stock-movement/", StockMovementView.as_view(), name="stockMovement"),
     path(
-        "revenue-profit-chart/", RevenueProfitVis.as_view(),
-        name="revenu-profit-chart"
+        "revenue-profit-chart/", RevenueProfitVis.as_view(), name="revenu-profit-chart"
     ),
 ]

@@ -49,15 +49,13 @@ class Command(BaseCommand):
             c.name: c
             for c in [
                 Category.objects.create(
-                    name="Electronics",
-                    description="Electronic devices and accessories"
+                    name="Electronics", description="Electronic devices and accessories"
                 ),
                 Category.objects.create(
                     name="Clothing", description="Apparel and fashion items"
                 ),
                 Category.objects.create(
-                    name="Food & Beverages",
-                    description="Food items and drinks"
+                    name="Food & Beverages", description="Food items and drinks"
                 ),
                 Category.objects.create(
                     name="Books", description="Books and publications"
@@ -67,9 +65,7 @@ class Command(BaseCommand):
                 ),
             ]
         }
-        self.stdout.write(
-            self.style.SUCCESS(f"Created {len(categories)} categories")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Created {len(categories)} categories"))
 
         # ── SUPPLIERS ────────────────────────────────────────────────────────
         self.stdout.write("Creating suppliers...")
@@ -108,48 +104,25 @@ class Command(BaseCommand):
                 ),
             ]
         }
-        self.stdout.write(
-            self.style.SUCCESS(f"Created {len(suppliers)} suppliers")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Created {len(suppliers)} suppliers"))
 
         # ── PRODUCTS ─────────────────────────────────────────────────────────
         self.stdout.write("Creating products...")
         products_data = [
             # name, category, supplier, cost, price, stock
             ("Laptop", "Electronics", "Tech Distributors Inc", 800, 1200, 50),
-            (
-                "Smartphone", "Electronics", "Tech Distributors Inc",
-                500, 750, 100
-            ),
-            (
-                "Wireless Mouse", "Electronics", "Tech Distributors Inc",
-                15, 30, 200
-            ),
+            ("Smartphone", "Electronics", "Tech Distributors Inc", 500, 750, 100),
+            ("Wireless Mouse", "Electronics", "Tech Distributors Inc", 15, 30, 200),
             ("USB Cable", "Electronics", "Tech Distributors Inc", 5, 12, 500),
-            (
-                "Headphones", "Electronics", "Tech Distributors Inc",
-                50, 100, 150
-            ),
+            ("Headphones", "Electronics", "Tech Distributors Inc", 50, 100, 150),
             ("T-Shirt", "Clothing", "Fashion Wholesale Ltd", 8, 20, 300),
             ("Jeans", "Clothing", "Fashion Wholesale Ltd", 25, 60, 150),
             ("Jacket", "Clothing", "Fashion Wholesale Ltd", 40, 100, 75),
             ("Sneakers", "Clothing", "Fashion Wholesale Ltd", 35, 80, 120),
-            (
-                "Coffee Beans", "Food & Beverages", "Global Foods Supply",
-                10, 18, 120
-            ),
-            (
-                "Organic Pasta", "Food & Beverages", "Global Foods Supply",
-                3, 8, 250
-            ),
-            (
-                "Energy Drink", "Food & Beverages", "Global Foods Supply",
-                1.5, 3.5, 400
-            ),
-            (
-                "Green Tea", "Food & Beverages", "Global Foods Supply",
-                5, 12, 180
-            ),
+            ("Coffee Beans", "Food & Beverages", "Global Foods Supply", 10, 18, 120),
+            ("Organic Pasta", "Food & Beverages", "Global Foods Supply", 3, 8, 250),
+            ("Energy Drink", "Food & Beverages", "Global Foods Supply", 1.5, 3.5, 400),
+            ("Green Tea", "Food & Beverages", "Global Foods Supply", 5, 12, 180),
             ("Python Programming", "Books", "Book Publishers Co", 20, 45, 80),
             ("Django Guide", "Books", "Book Publishers Co", 25, 55, 60),
             ("Web Development", "Books", "Book Publishers Co", 30, 65, 45),
@@ -168,8 +141,7 @@ class Command(BaseCommand):
                 name=name,
                 sku=f"SKU-{idx:05d}",
                 description=(
-                    f"High quality {name.lower()} from "
-                    f"{suppliers[sup_name].name}"
+                    f"High quality {name.lower()} from " f"{suppliers[sup_name].name}"
                 ),
                 category=categories[cat_name],
                 supplier=suppliers[sup_name],
@@ -184,9 +156,7 @@ class Command(BaseCommand):
             )
             products.append(product)
 
-        self.stdout.write(
-            self.style.SUCCESS(f"Created {len(products)} products")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Created {len(products)} products"))
 
         # ── USERS ────────────────────────────────────────────────────────────
         self.stdout.write("Creating users...")
@@ -238,12 +208,8 @@ class Command(BaseCommand):
                 user.set_password(password)
                 user.save()
             users.append(user)
-            self.stdout.write(
-                f"  {'Created' if created else 'Found'}: {user.username}"
-            )
-        self.stdout.write(
-            self.style.SUCCESS(f"Created/verified {len(users)} users")
-        )
+            self.stdout.write(f"  {'Created' if created else 'Found'}: {user.username}")
+        self.stdout.write(self.style.SUCCESS(f"Created/verified {len(users)} users"))
 
         # ── STOCK MOVEMENTS ──────────────────────────────────────────────────
         self.stdout.write("Creating stock movements...")
@@ -372,9 +338,7 @@ class Command(BaseCommand):
                 address="741 Willow Ct, Minneapolis, MN",
             ),
         ]
-        self.stdout.write(
-            self.style.SUCCESS(f"Created {len(customers)} customers")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Created {len(customers)} customers"))
 
         # ── SALES — ALL MONTHS OF 2026 UP TO TODAY ──────────────────────────
         self.stdout.write("Creating 2026 sales...")
@@ -420,8 +384,7 @@ class Command(BaseCommand):
                     payment_method=random.choice(payment_methods),
                     payment_status=random.choice(payment_statuses),
                     notes=(
-                        f"Sale {invoice_counter}"
-                        if invoice_counter % 5 == 0 else ""
+                        f"Sale {invoice_counter}" if invoice_counter % 5 == 0 else ""
                     ),
                 )
 
@@ -466,18 +429,12 @@ class Command(BaseCommand):
 
                 invoice_counter += 1
 
-            self.stdout.write(
-                f"  Month {month:02d}: {sales_per_month[month]} sales"
-            )
+            self.stdout.write(f"  Month {month:02d}: {sales_per_month[month]} sales")
 
         self.stdout.write(
             self.style.SUCCESS(f"\nCreated {Sales.objects.count()} sales")
         )
         self.stdout.write(
-            self.style.SUCCESS(
-                f"Created {SalesItem.objects.count()} sales items"
-            )
+            self.style.SUCCESS(f"Created {SalesItem.objects.count()} sales items")
         )
-        self.stdout.write(
-            self.style.SUCCESS("✅ Database populated successfully!")
-        )
+        self.stdout.write(self.style.SUCCESS("✅ Database populated successfully!"))

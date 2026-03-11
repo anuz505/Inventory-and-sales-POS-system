@@ -12,16 +12,14 @@ def get_start_date(period: str):
         month = (now.month - 3) % 12 or 12
         year = now.year if now.month > 3 else now.year - 1
         start = now.replace(
-            year=year, month=month,
-            day=1, hour=0, minute=0, second=0, microsecond=0
+            year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0
         )
         end = now
     elif period == "today":
         start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         end = now
     elif period == "year":
-        start = now.replace(month=1, day=1, hour=0,
-                            minute=0, second=0, microsecond=0)
+        start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
         end = now
     elif period == "12months":
         start = (now - timedelta(days=365)).replace(

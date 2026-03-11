@@ -79,10 +79,7 @@ class StockMovement(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
-    movement_type = models.CharField(
-        max_length=3,
-        choices=MOVEMENT_TYPE_CHOICES
-    )
+    movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPE_CHOICES)
     reason = models.CharField(max_length=100, choices=REASON_CHOICES)
     sales = models.ForeignKey(
         "sales.Sales",
