@@ -63,12 +63,18 @@ class TestSalesModel:
 
     def test_sale_payment_method_choices(self, user, customer):
         for method, _ in Sales.PAYMENT_METHODS:
-            sale = SalesFactory(user=user, customer=customer, payment_method=method)
+            sale = SalesFactory(
+                user=user,
+                customer=customer,
+                payment_method=method)
             assert sale.payment_method == method
 
     def test_sale_payment_status_choices(self, user, customer):
         for status, _ in Sales.PAYMENT_STATUS:
-            sale = SalesFactory(user=user, customer=customer, payment_status=status)
+            sale = SalesFactory(
+                user=user,
+                customer=customer,
+                payment_status=status)
             assert sale.payment_status == status
 
     def test_sale_uuid_pk(self, user, customer):
@@ -78,13 +84,19 @@ class TestSalesModel:
     def test_sale_unique_invoice_number(self, user, customer):
         from django.db import IntegrityError
 
-        SalesFactory(user=user, customer=customer, invoice_number="INV-UNIQUE01")
+        SalesFactory(
+            user=user,
+            customer=customer,
+            invoice_number="INV-UNIQUE01")
         with pytest.raises(IntegrityError):
-            SalesFactory(user=user, customer=customer, invoice_number="INV-UNIQUE01")
+            SalesFactory(
+                user=user,
+                customer=customer,
+                invoice_number="INV-UNIQUE01")
 
     def test_sale_ordering_newest_first(self, user, customer):
-        s1 = SalesFactory(user=user, customer=customer)
-        s2 = SalesFactory(user=user, customer=customer)
+        SalesFactory(user=user, customer=customer)
+        SalesFactory(user=user, customer=customer)
         sales = list(Sales.objects.all())
         # Newest (higher pk) should come first
         assert sales[0].created_at >= sales[1].created_at

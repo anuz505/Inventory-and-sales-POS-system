@@ -23,8 +23,8 @@ pipeline{
             steps{
                 bat """
                 docker compose up -d --build
-                timeout /t 30
-                """
+                                        """
+                sleep(time: 30, unit: 'SECONDS')
             }
         }
 
@@ -32,7 +32,6 @@ pipeline{
             steps{
                 bat """
                 myvenv\\Scripts\\pytest --cov=. ^
-                set DJANGO_SETTINGS_MODULE=internship_task.test_settings
                 --cov-report=xml ^
                 --cov-report=html ^
                 --junitxml=test-results.xml ^

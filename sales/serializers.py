@@ -17,7 +17,9 @@ class CustomerSerialzer(serializers.ModelSerializer):
 class SalesItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
     unit_price = serializers.DecimalField(
-        source="product.selling_price", max_digits=10, decimal_places=2, read_only=True
+        source="product.selling_price",
+        max_digits=10, decimal_places=2,
+        read_only=True
     )
     id = serializers.IntegerField(required=False)
 
@@ -29,7 +31,8 @@ class SalesItemSerializer(serializers.ModelSerializer):
 
 class SalesSerializer(serializers.ModelSerializer):
     items = SalesItemSerializer(many=True)
-    customer_name = serializers.CharField(source="customer.name", read_only=True)
+    customer_name = serializers.CharField(
+        source="customer.name", read_only=True)
     staff_name = serializers.CharField(source="user.username", read_only=True)
 
     class Meta:
@@ -49,7 +52,8 @@ class SalesSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         invoice_number = f"INV-{uuid.uuid4().hex[:8].upper()}"
         items_data = validated_data.pop("items")
-        sale = Sales.objects.create(invoice_number=invoice_number, **validated_data)
+        sale = Sales.objects.create(invoice_number=invoice_number,
+                                    **validated_data)
         subtotal = Decimal("0.00")
 
         # Pass 1: lock products and validate stock
@@ -68,7 +72,8 @@ class SalesSerializer(serializers.ModelSerializer):
             if quantity > product.stock_quantity:
                 raise serializers.ValidationError(
                     f"Insufficient stock for {product.name}. "
-                    f"Available: {product.stock_quantity}, Requested: {quantity}"
+                    f"Available: {product.stock_quantity}, "
+                    f"Requested: {quantity}"
                 )
 
             locked_products[product.pk] = product
@@ -77,9 +82,11 @@ class SalesSerializer(serializers.ModelSerializer):
             )
 
         # Pass 2: create items, deduct stock only if completed
-        for item_data, product, quantity, unit_price, item_subtotal in items_to_process:
+        for (item_data, product, quantity, unit_price,
+             item_subtotal) in items_to_process:
             SalesItem.objects.create(
-                sale=sale, subtotal=item_subtotal, unit_price=unit_price, **item_data
+                sale=sale, subtotal=item_subtotal,
+                unit_price=unit_price, **item_data
             )
 
             if sale.payment_status == "completed":
@@ -108,10 +115,9 @@ class SalesSerializer(serializers.ModelSerializer):
 
         # --- Status transition guards ---
         if old_status == "refunded":
-            raise serializers.ValidationError("Refunded sales cannot be modified")
+            raise serializers.ValidationError("Refunded cannot be modified")
 
         if old_status == "completed":
-            # ✅ Exclude "user" — it's injected by the view, not sent by client
             client_keys = {k for k in validated_data.keys() if k != "user"}
             if new_status != "refunded" or len(client_keys) > 1:
                 raise serializers.ValidationError(
@@ -127,7 +133,8 @@ class SalesSerializer(serializers.ModelSerializer):
         if old_status == "pending":
             instance.payment_status = new_status
             instance.notes = validated_data.get("notes", instance.notes)
-            instance.customer = validated_data.get("customer", instance.customer)
+            instance.customer = validated_data.get("customer",
+                                                   instance.customer)
             instance.payment_method = validated_data.get(
                 "payment_method", instance.payment_method
             )
@@ -154,14 +161,15 @@ class SalesSerializer(serializers.ModelSerializer):
         discount = instance.discount_amount or Decimal("0.00")
         if discount > instance.subtotal:
             raise serializers.ValidationError(
-                f"Discount ({discount}) cannot exceed subtotal ({instance.subtotal})"
+                f"Discount ({discount}) cannot exceed ({instance.subtotal})"
             )
         instance.total_amount = instance.subtotal - discount
 
     def _update_items(self, instance, items_data):
         existing_items = {item.id: item for item in instance.items.all()}
         incoming_ids = {
-            item_data.get("id") for item_data in items_data if item_data.get("id")
+            item_data.get("id") for item_data in items_data
+            if item_data.get("id")
         }
 
         for item_id, item in existing_items.items():
@@ -181,7 +189,8 @@ class SalesSerializer(serializers.ModelSerializer):
             if quantity > product.stock_quantity:
                 raise serializers.ValidationError(
                     f"Insufficient stock for {product.name}. "
-                    f"Available: {product.stock_quantity}, Requested: {quantity}"
+                    f"Available: {product.stock_quantity}, "
+                    f"Requested: {quantity}"
                 )
 
             item_id = item_data.get("id")
@@ -193,7 +202,8 @@ class SalesSerializer(serializers.ModelSerializer):
                 item.notes = item_data.get("notes", item.notes)
                 item.save()
             else:
-                item_data_clean = {k: v for k, v in item_data.items() if k != "id"}
+                item_data_clean = {k: v for k, v in item_data.items()
+                                   if k != "id"}
                 SalesItem.objects.create(
                     sale=instance,
                     subtotal=item_subtotal,
@@ -204,17 +214,22 @@ class SalesSerializer(serializers.ModelSerializer):
         instance.subtotal = subtotal
 
     def _complete_sale(self, instance):
-        sales_items = SalesItem.objects.filter(sale=instance).select_related("product")
+        sales_items = SalesItem.objects.filter(
+            sale=instance
+        ).select_related("product")
 
         # Pass 1: lock and validate all
         locked_products = {}
         for sale_item in sales_items:
-            product = Product.objects.select_for_update().get(pk=sale_item.product.pk)
+            product = Product.objects.select_for_update().get(
+                pk=sale_item.product.pk
+                )
             locked_products[sale_item.id] = product
             if sale_item.quantity > product.stock_quantity:
                 raise serializers.ValidationError(
                     f"Insufficient stock for {product.name}. "
-                    f"Available: {product.stock_quantity}, Requested: {sale_item.quantity}"
+                    f"Available: {product.stock_quantity}"
+                    f"Requested: {sale_item.quantity}"
                 )
 
         # Pass 2: mutate
@@ -234,10 +249,14 @@ class SalesSerializer(serializers.ModelSerializer):
             )
 
     def _refund_sale(self, instance):
-        sales_items = SalesItem.objects.filter(sale=instance).select_related("product")
+        sales_items = SalesItem.objects.filter(
+            sale=instance
+        ).select_related("product")
 
         for sale_item in sales_items:
-            product = Product.objects.select_for_update().get(pk=sale_item.product.pk)
+            product = Product.objects.select_for_update().get(
+                pk=sale_item.product.pk
+            )
             product.stock_quantity += sale_item.quantity
             product.save(update_fields=["stock_quantity"])
 

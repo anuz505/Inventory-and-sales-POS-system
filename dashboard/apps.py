@@ -5,4 +5,4 @@ class DashboardConfig(AppConfig):
     name = "dashboard"
 
     def ready(self):
-        from inventory import signals
+        from inventory import signals # noqa

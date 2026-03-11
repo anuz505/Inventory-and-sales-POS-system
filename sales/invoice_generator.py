@@ -5,7 +5,6 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
-from django.db.models import Sum
 from .models import Sales
 
 
@@ -49,16 +48,17 @@ def generate_invoice_pdf(sale_id):
     # Invoice Details (Right side)
     c.setFont("Helvetica", 10)
     c.drawRightString(
-        width - 1 * inch, height - 1.4 * inch, f"Invoice #: {sale.invoice_number}"
+        width - 1 * inch, height - 1.4 * inch, f"Invoice #: {sale.invoice_number}" # noqa
     )
     c.drawRightString(
         width - 1 * inch,
         height - 1.6 * inch,
-        f"Date: {sale.created_at.strftime('%B %d, %Y') if sale.created_at else 'N/A'}",
-        # TODO change this after populating db
+        f"Date: {sale.created_at.strftime('%B %d, %Y')}",
     )
     c.drawRightString(
-        width - 1 * inch, height - 1.8 * inch, f"Payment: {sale.payment_method}"
+        width - 1 * inch,
+        height - 1.8 * inch,
+        f"Payment: {sale.payment_method}"
     )
 
     # Payment Status Badge
@@ -69,13 +69,16 @@ def generate_invoice_pdf(sale_id):
     )
     c.setFillColor(status_color)
     c.drawRightString(
-        width - 1 * inch, height - 2.0 * inch, f"Status: {sale.payment_status.upper()}"
+        width - 1 * inch,
+        height - 2.0 * inch,
+        f"Status: {sale.payment_status.upper()}"
     )
     c.setFillColor(colors.black)
 
     # Horizontal line separator
     c.setStrokeColor(colors.grey)
-    c.line(1 * inch, height - 2.3 * inch, width - 1 * inch, height - 2.3 * inch)
+    c.line(1 * inch,
+           height - 2.3 * inch, width - 1 * inch, height - 2.3 * inch)
 
     # ==================== CUSTOMER SECTION ====================
     c.setFont("Helvetica-Bold", 12)
@@ -88,10 +91,6 @@ def generate_invoice_pdf(sale_id):
     if sale.customer.email:
         y_position -= 0.2 * inch
         c.drawString(1 * inch, y_position, f"Email: {sale.customer.email}")
-
-    # if sale.customer.phone:
-    #     y_position -= 0.2 * inch
-    #     c.drawString(1 * inch, y_position, f"Phone: {sale.customer.phone}")
 
     if sale.customer.address:
         y_position -= 0.2 * inch
@@ -110,7 +109,8 @@ def generate_invoice_pdf(sale_id):
 
     # ==================== LINE ITEMS TABLE ====================
     # Prepare table data
-    table_data = [["Product", "Quantity", "Unit Price", "Discount", "Subtotal"]]
+    table_data = [["Product", "Quantity",
+                   "Unit Price", "Discount", "Subtotal"]]
 
     for item in sale.items.all():
         table_data.append(
@@ -125,7 +125,8 @@ def generate_invoice_pdf(sale_id):
 
     # Create table
     table = Table(
-        table_data, colWidths=[3 * inch, 1 * inch, 1 * inch, 1 * inch, 1.5 * inch]
+        table_data,
+        colWidths=[3 * inch, 1 * inch, 1 * inch, 1 * inch, 1.5 * inch]
     )
 
     # Style the table
@@ -168,21 +169,24 @@ def generate_invoice_pdf(sale_id):
     table.drawOn(c, 1 * inch, table_y_position - len(table_data) * 0.3 * inch)
 
     # ==================== TOTALS SECTION ====================
-    totals_y_start = table_y_position - len(table_data) * 0.3 * inch - 0.5 * inch
+    totals_y_start = table_y_position - len(table_data) * 0.3 * inch - 0.5 * inch # noqa
 
     # Calculate totals
     items_subtotal = sum(item.subtotal for item in sale.items.all())
     total_discount = (
-        sum(item.discount_amount for item in sale.items.all()) + sale.discount_amount
+        sum(item.discount_amount for item in sale.items.all())
+        + sale.discount_amount
     )
 
     c.setFont("Helvetica", 10)
     c.drawRightString(width - 2.5 * inch, totals_y_start, "Subtotal:")
-    c.drawRightString(width - 1 * inch, totals_y_start, f"${items_subtotal:.2f}")
+    c.drawRightString(width - 1 * inch, totals_y_start,
+                      f"${items_subtotal:.2f}")
 
     totals_y_start -= 0.25 * inch
     c.drawRightString(width - 2.5 * inch, totals_y_start, "Discount:")
-    c.drawRightString(width - 1 * inch, totals_y_start, f"-${total_discount:.2f}")
+    c.drawRightString(width - 1 * inch, totals_y_start,
+                      f"-${total_discount:.2f}")
 
     # Draw line above total
     totals_y_start -= 0.1 * inch
@@ -192,7 +196,8 @@ def generate_invoice_pdf(sale_id):
     totals_y_start -= 0.25 * inch
     c.setFont("Helvetica-Bold", 12)
     c.drawRightString(width - 2.5 * inch, totals_y_start, "TOTAL:")
-    c.drawRightString(width - 1 * inch, totals_y_start, f"${sale.total_amount:.2f}")
+    c.drawRightString(width - 1 * inch, totals_y_start,
+                      f"${sale.total_amount:.2f}")
 
     # ==================== NOTES SECTION ====================
     if sale.notes:

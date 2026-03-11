@@ -49,7 +49,8 @@ def send_low_stock_email(product_id: str):
     threshold = product.low_stock_limit
 
     print(
-        f"Product: {product.name}, Stock: {product.stock_quantity}, Threshold: {threshold}"
+        f"Product: {product.name}",
+        f"Stock: {product.stock_quantity}, Threshold: {threshold}"
     )
 
     if product.stock_quantity < threshold:

@@ -46,8 +46,10 @@ class Sales(models.Model):
         related_name="sales",
     )
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=10,
+                                          decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10,
+                                       decimal_places=2, default=0)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
     payment_status = models.CharField(
         max_length=20, choices=PAYMENT_STATUS, default="completed"
@@ -72,18 +74,18 @@ class Sales(models.Model):
 
 class SalesItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    sale = models.ForeignKey(Sales, on_delete=models.CASCADE, related_name="items")
+    sale = models.ForeignKey(Sales, on_delete=models.CASCADE,
+                             related_name="items")
     product = models.ForeignKey("inventory.Product", on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2,
+                                          default=0)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name = "Sales Item"
         verbose_name_plural = "Sales Items"
-        indexes = [models.Index(fields=["sale"]), models.Index(fields=["product"])]
-
-    # def __str__(self):
-    #     return f"{self.product.name} x {self.quantity} - {self.sale.invoice_number}"
+        indexes = [models.Index(fields=["sale"]),
+                   models.Index(fields=["product"])]

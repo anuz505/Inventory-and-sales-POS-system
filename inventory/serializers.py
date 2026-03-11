@@ -12,13 +12,27 @@ class CategorySerializer(serializers.ModelSerializer):
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
-        fields = ["id", "name", "email", "phone", "address", "created_at", "updated_at"]
+        fields = [
+            "id",
+            "name",
+            "email",
+            "phone",
+            "address",
+            "created_at",
+            "updated_at",
+        ]
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source="category.name", read_only=True)
-    supplier_name = serializers.CharField(source="supplier.name", read_only=True)
+    category_name = serializers.CharField(
+        source="category.name",
+        read_only=True
+    )
+    supplier_name = serializers.CharField(
+        source="supplier.name",
+        read_only=True
+    )
 
     class Meta:
         model = Product

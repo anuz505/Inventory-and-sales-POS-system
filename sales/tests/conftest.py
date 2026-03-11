@@ -34,7 +34,7 @@ def out_of_stock_product(db):
     return ProductFactory(stock_quantity=0, low_stock_limit=5)
 
 
-# ─── Sales ────────────────────────────────────────────────────────────────────
+# ─── Sales
 
 
 @pytest.fixture
@@ -87,7 +87,7 @@ def sale_with_item(db, user, customer, product):
     return sale
 
 
-# ─── Payload helpers ─────────────────────────────────────────────────────────
+# ─── Payload helpers
 
 
 @pytest.fixture

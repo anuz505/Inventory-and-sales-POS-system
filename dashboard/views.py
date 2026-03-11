@@ -51,7 +51,8 @@ class RevenueProfitVis(APIView):
 
     def get(self, request, format=None):
         start_date, end_date, _ = get_period_range_from_request(request)
-        chart_data = get_revenue_profit_data_vis(startdate=start_date, enddate=end_date)
+        chart_data = get_revenue_profit_data_vis(startdate=start_date,
+                                                 enddate=end_date)
         return Response(chart_data)
 
 
@@ -62,7 +63,8 @@ class SalesReportView(APIView):
         start_date, end_date, _ = get_period_range_from_request(request)
         file_name = generate_filename("sales")
         return generate_csv(
-            filename=file_name, model=Sales, startdate=start_date, enddate=end_date
+            filename=file_name, model=Sales,
+            startdate=start_date, enddate=end_date
         )
 
 

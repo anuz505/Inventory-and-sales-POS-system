@@ -71,7 +71,8 @@ class TestCategoryViewSet:
     def test_list_returns_200(self, api_client):
         CategoryFactory.create_batch(3)
         assert (
-            api_client.get(reverse("category-list")).status_code == status.HTTP_200_OK
+            api_client.get(reverse("category-list")).status_code
+            == status.HTTP_200_OK
         )
 
     def test_create_returns_201(self, api_client, category_payload):
@@ -132,7 +133,8 @@ class TestSupplierViewSet:
     def test_list_authenticated_returns_200(self, auth_client):
         SupplierFactory.create_batch(2)
         assert (
-            auth_client.get(reverse("supplier-list")).status_code == status.HTTP_200_OK
+            auth_client.get(reverse("supplier-list")).status_code
+            == status.HTTP_200_OK
         )
 
     def test_create_supplier(self, auth_client, supplier_payload):
@@ -142,7 +144,9 @@ class TestSupplierViewSet:
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["email"] == supplier_payload["email"]
 
-    @pytest.mark.parametrize("bad_email", ["not-email", "missing@", "@nodomain"])
+    @pytest.mark.parametrize(
+        "bad_email", ["not-email", "missing@", "@nodomain"]
+    )
     def test_create_with_invalid_email_returns_400(
         self, auth_client, supplier_payload, bad_email
     ):
@@ -198,7 +202,8 @@ class TestProductViewSet:
     def test_list_returns_200(self, auth_client):
         ProductFactory.create_batch(2)
         assert (
-            auth_client.get(reverse("products-list")).status_code == status.HTTP_200_OK
+            auth_client.get(reverse("products-list")).status_code
+            == status.HTTP_200_OK
         )
 
     def test_list_includes_nested_names(self, auth_client):
@@ -286,9 +291,14 @@ class TestProductViewSet:
         cat = CategoryFactory()
         ProductFactory.create_batch(3, category=cat)
         ProductFactory.create_batch(2)
-        response = auth_client.get(reverse("products-list"), {"category": str(cat.id)})
+        response = auth_client.get(
+            reverse("products-list"), {"category": str(cat.id)}
+        )
         assert response.status_code == status.HTTP_200_OK
-        assert all(str(r["category"]) == str(cat.id) for r in response.data["results"])
+        assert all(
+            str(r["category"]) == str(cat.id)
+            for r in response.data["results"]
+        )
 
     @pytest.mark.parametrize(
         "ordering,key,reverse_sort",
@@ -302,7 +312,9 @@ class TestProductViewSet:
     )
     def test_ordering(self, auth_client, ordering, key, reverse_sort):
         ProductFactory.create_batch(5)
-        response = auth_client.get(reverse("products-list"), {"ordering": ordering})
+        response = auth_client.get(
+            reverse("products-list"), {"ordering": ordering}
+        )
         assert response.status_code == status.HTTP_200_OK
         numeric_keys = {
             "selling_price",
@@ -324,7 +336,11 @@ class TestProductViewSet:
     @pytest.mark.parametrize(
         "trait,field,check",
         [
-            ("low_stock", "stock_quantity", lambda v, p: v < p["low_stock_limit"]),
+            (
+                "low_stock",
+                "stock_quantity",
+                lambda v, p: v < p["low_stock_limit"]
+            ),
             ("out_of_stock", "stock_quantity", lambda v, _: v == 0),
         ],
     )
@@ -351,7 +367,9 @@ class TestStockMovementViewSet:
 
     def test_list_includes_product_name_and_username(self, auth_client):
         StockMovementFactory()
-        result = auth_client.get(reverse("stockmovement-list")).data["results"][0]
+        result = auth_client.get(
+            reverse("stockmovement-list")
+        ).data["results"][0]
         assert "product_name" in result
         assert "username" in result
 
@@ -442,13 +460,16 @@ class TestStockMovementViewSet:
         )
         assert response.status_code == status.HTTP_200_OK
         assert all(
-            r["movement_type"] == movement_type for r in response.data["results"]
+            r["movement_type"] == movement_type
+            for r in response.data["results"]
         )
 
     @pytest.mark.parametrize("limit", [1, 3, 5])
     def test_pagination(self, auth_client, limit):
         StockMovementFactory.create_batch(10)
-        response = auth_client.get(reverse("stockmovement-list"), {"limit": limit})
+        response = auth_client.get(
+            reverse("stockmovement-list"), {"limit": limit}
+        )
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) <= limit
 

@@ -1,5 +1,7 @@
-from django.utils import timezone
 from django.db.models import Sum, Count, F, ExpressionWrapper, DecimalField
+from .utils import get_prev_period
+from sales.models import Sales, Customer, SalesItem
+from inventory.models import StockMovement, Product
 
 from django.db.models.functions import TruncMonth
 
@@ -10,16 +12,14 @@ periods = {
     "today": "today",
     "12months": "12months",
 }
-from .utils import get_prev_period
-from sales.models import Sales, Customer, SalesItem
-from inventory.models import StockMovement, Product
 
 
 def get_trend(stat: str, start, end, stats_fn):
     prev_start_date, prev_end_date = get_prev_period(start, end)
 
     this_stat = stats_fn(startdate=start, enddate=end)[stat]
-    prev_stat = stats_fn(startdate=prev_start_date, enddate=prev_end_date)[stat]
+    prev_stat = stats_fn(startdate=prev_start_date,
+                         enddate=prev_end_date)[stat]
     diff = this_stat - prev_stat
     if diff > 0:
         trend = "increasing"
@@ -46,14 +46,20 @@ def get_sales_trend(start, end):
 
 def get_profit_trend(start, end):
     profit_trend = get_trend(
-        stats_fn=get_sales_stats, start=start, end=end, stat="total_profit_amount"
+        stats_fn=get_sales_stats,
+        start=start,
+        end=end,
+        stat="total_profit_amount"
     )
     return {"profit_trend": profit_trend}
 
 
 def get_customers_trend(start, end):
     customer_trend = get_trend(
-        stats_fn=get_inventory_stats, start=start, end=end, stat="total_customers"
+        stats_fn=get_inventory_stats,
+        start=start,
+        end=end,
+        stat="total_customers"
     )
     return {"customer_trend": customer_trend}
 
@@ -88,7 +94,10 @@ def get_revenue_profit_data_vis(startdate, enddate):
     for item in chart_data:
         revenue = item["revenue"] or 0
         profit = item["profit"] or 0
-        profit_margin = round((profit / revenue * 100), 2) if revenue > 0 else 0
+        profit_margin = (
+            round((profit / revenue * 100), 2)
+            if revenue > 0 else 0
+        )
         formatted_data.append(
             {
                 "month": item["month"].strftime("%b %Y"),
@@ -107,7 +116,10 @@ def get_sales_stats(startdate, enddate):
     ).aggregate(total=Sum("total_amount"))
     highest_revenue_payment_method = (
         Sales.objects.values("payment_method")
-        .filter(payment_status="completed", created_at__range=[startdate, enddate])
+        .filter(
+            payment_status="completed",
+            created_at__range=[startdate, enddate]
+        )
         .annotate(total_sales=Sum("total_amount"))
         .order_by("-total_sales")
     )
@@ -119,7 +131,8 @@ def get_sales_stats(startdate, enddate):
             total_selling=F("quantity") * F("product__selling_price"),
         )
         .aggregate(
-            total_cost_price=Sum("total_cost"), total_selling_price=Sum("total_selling")
+            total_cost_price=Sum("total_cost"),
+            total_selling_price=Sum("total_selling")
         )
     )
     total_profit_amount = (total_profit["total_selling_price"] or 0) - (
@@ -137,7 +150,10 @@ def get_sales_stats(startdate, enddate):
 
     top_customers = (
         Sales.objects.values("customer__name")
-        .filter(payment_status="completed", created_at__range=[startdate, enddate])
+        .filter(
+            payment_status="completed",
+            created_at__range=[startdate, enddate]
+        )
         .annotate(total_orders=Count("id"), total_spent=Sum("total_amount"))
         .order_by("-total_spent")[:5]
     )
@@ -177,7 +193,8 @@ def get_inventory_stats(startdate, enddate):
     ).count()
 
     total_low_supply_products = Product.objects.filter(
-        stock_quantity__lt=F("low_stock_limit"), created_at__range=[startdate, enddate]
+        stock_quantity__lt=F("low_stock_limit"),
+        created_at__range=[startdate, enddate]
     ).count()
     low_supply_percentage = (
         (total_low_supply_products / total_products_count) * 100

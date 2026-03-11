@@ -3,9 +3,10 @@ from decimal import Decimal
 from rest_framework.exceptions import ValidationError
 import pytest
 from inventory.tests.factories import ProductFactory
-from sales.serializers import CustomerSerialzer, SalesItemSerializer, SalesSerializer
-from sales.models import Customer, Sales, SalesItem
-
+from sales.serializers import (
+    CustomerSerialzer,
+    SalesItemSerializer,
+    SalesSerializer)
 from .factories import CustomerFactory, SalesFactory, SalesItemFactory
 
 
@@ -29,7 +30,9 @@ class TestCustomerSerializer:
 
     @pytest.mark.parametrize(
         "field",
-        ["id", "name", "email", "phone_number", "address", "created_at", "updated_at"],
+        ["id", "name",
+         "email", "phone_number",
+         "address", "created_at", "updated_at"],
     )
     def test_field_present_in_output(self, field):
         assert field in CustomerSerialzer(CustomerFactory()).data
@@ -37,7 +40,6 @@ class TestCustomerSerializer:
     def test_read_only_fields_not_writable(self):
         """id, created_at, updated_at should be ignored on input."""
         import uuid
-        from datetime import datetime
 
         payload = {
             "id": str(uuid.uuid4()),
@@ -92,7 +94,8 @@ class TestCustomerSerializer:
         """PATCH semantics: only provided fields are updated."""
         customer = CustomerFactory()
         original_email = customer.email
-        s = CustomerSerialzer(customer, data={"name": "Updated Name"}, partial=True)
+        s = CustomerSerialzer(customer,
+                              data={"name": "Updated Name"}, partial=True)
         assert s.is_valid(), s.errors
         updated = s.save()
         assert updated.name == "Updated Name"
@@ -128,7 +131,9 @@ class TestSalesItemSerializer:
 
 
 class TestSalesSerializerCreate:
-    def test_create_pending_sale_does_not_deduct_stock(self, user, customer, product):
+    def test_create_pending_sale_does_not_deduct_stock(
+            self, user,
+            customer, product):
         initial_stock = product.stock_quantity
         data = {
             "customer": customer.id,
@@ -136,16 +141,19 @@ class TestSalesSerializerCreate:
             "payment_status": "pending",
             "discount_amount": "0.00",
             "items": [
-                {"product": product.id, "quantity": 2, "discount_amount": "0.00"}
+                {"product": product.id,
+                 "quantity": 2, "discount_amount": "0.00"}
             ],
         }
         serializer = SalesSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
-        sale = serializer.save(user=user)
+        serializer.save(user=user)
         product.refresh_from_db()
-        assert product.stock_quantity == initial_stock  # No deduction for pending
+        assert product.stock_quantity == initial_stock
 
-    def test_create_completed_sale_deducts_stock(self, user, customer, product):
+    def test_create_completed_sale_deducts_stock(
+            self, user,
+            customer, product):
         initial_stock = product.stock_quantity
         data = {
             "customer": customer.id,
@@ -153,23 +161,27 @@ class TestSalesSerializerCreate:
             "payment_status": "completed",
             "discount_amount": "0.00",
             "items": [
-                {"product": product.id, "quantity": 3, "discount_amount": "0.00"}
+                {"product": product.id,
+                 "quantity": 3, "discount_amount": "0.00"}
             ],
         }
         serializer = SalesSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
-        sale = serializer.save(user=user)
+        serializer.save(user=user)
         product.refresh_from_db()
         assert product.stock_quantity == initial_stock - 3
 
-    def test_create_sale_calculates_subtotal_and_total(self, user, customer, product):
+    def test_create_sale_calculates_subtotal_and_total(
+            self, user,
+            customer, product):
         data = {
             "customer": customer.id,
             "payment_method": "cash",
             "payment_status": "pending",
             "discount_amount": "10.00",
             "items": [
-                {"product": product.id, "quantity": 2, "discount_amount": "0.00"}
+                {"product": product.id,
+                 "quantity": 2, "discount_amount": "0.00"}
             ],
         }
         serializer = SalesSerializer(data=data)
@@ -179,14 +191,17 @@ class TestSalesSerializerCreate:
         assert sale.subtotal == expected_subtotal
         assert sale.total_amount == expected_subtotal - Decimal("10.00")
 
-    def test_create_sale_generates_invoice_number(self, user, customer, product):
+    def test_create_sale_generates_invoice_number(
+            self, user,
+            customer, product):
         data = {
             "customer": customer.id,
             "payment_method": "cash",
             "payment_status": "pending",
             "discount_amount": "0.00",
             "items": [
-                {"product": product.id, "quantity": 1, "discount_amount": "0.00"}
+                {"product": product.id,
+                 "quantity": 1, "discount_amount": "0.00"}
             ],
         }
         serializer = SalesSerializer(data=data)
@@ -228,13 +243,15 @@ class TestSalesSerializerCreate:
             "payment_status": "completed",
             "discount_amount": "0.00",
             "items": [
-                {"product": product.id, "quantity": 2, "discount_amount": "0.00"}
+                {"product": product.id,
+                 "quantity": 2, "discount_amount": "0.00"}
             ],
         }
         serializer = SalesSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
         sale = serializer.save(user=user)
-        movements = StockMovement.objects.filter(sales=sale, movement_type="OUT")
+        movements = StockMovement.objects.filter(sales=sale,
+                                                 movement_type="OUT")
         assert movements.count() == 1
         assert movements.first().quantity == 2
 
@@ -259,7 +276,8 @@ class TestSalesSerializerUpdate:
             sales=sale_with_item, movement_type="OUT"
         ).exists()
 
-    def test_update_completed_to_refunded_restores_stock(self, user, customer, product):
+    def test_update_completed_to_refunded_restores_stock(self, user,
+                                                         customer, product):
         from inventory.models import StockMovement
 
         # Build a completed sale with an item
@@ -287,7 +305,8 @@ class TestSalesSerializerUpdate:
         serializer.save(user=user)
         product.refresh_from_db()
         assert product.stock_quantity == 100  # Restored
-        assert StockMovement.objects.filter(sales=sale, movement_type="IN").exists()
+        assert StockMovement.objects.filter(sales=sale,
+                                            movement_type="IN").exists()
 
     def test_update_refunded_sale_raises(self, user, refunded_sale):
         serializer = SalesSerializer(
@@ -300,7 +319,8 @@ class TestSalesSerializerUpdate:
             serializer.save(user=user)
         assert "Refunded sales cannot be modified" in str(exc.value)
 
-    def test_update_completed_sale_non_refund_change_raises(self, user, completed_sale):
+    def test_update_completed_sale_non_refund_change_raises(self, user,
+                                                            completed_sale):
         serializer = SalesSerializer(
             instance=completed_sale,
             data={"notes": "changing notes on completed"},
@@ -309,11 +329,16 @@ class TestSalesSerializerUpdate:
         assert serializer.is_valid(), serializer.errors
         with pytest.raises(ValidationError) as exc:
             serializer.save(user=user)
-        assert "Completed sales can only be converted to refunded" in str(exc.value)
+        assert (
+            "Completed sales can only be converted to refunded"
+            in str(exc.value)
+        )
 
     def test_update_pending_sale_items(self, user, sale_with_item, product):
         new_product = ProductFactory(
-            stock_quantity=50, selling_price=Decimal("30.00"), low_stock_limit=5
+            stock_quantity=50,
+            selling_price=Decimal("30.00"),
+            low_stock_limit=5
         )
         serializer = SalesSerializer(
             instance=sale_with_item,
@@ -335,7 +360,9 @@ class TestSalesSerializerUpdate:
         assert updated_sale.items.count() == 1
         assert updated_sale.items.first().product == new_product
 
-    def test_update_discount_exceeding_subtotal_raises(self, user, sale_with_item):
+    def test_update_discount_exceeding_subtotal_raises(self,
+                                                       user,
+                                                       sale_with_item):
         serializer = SalesSerializer(
             instance=sale_with_item,
             data={"discount_amount": "9999.00"},

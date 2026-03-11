@@ -11,7 +11,10 @@ from rest_framework import status
 
 @pytest.mark.django_db
 class TestUnauthenticatedAccess:
-    @pytest.mark.parametrize("url_name,factory", [("customer-list", CustomerFactory)])
+    @pytest.mark.parametrize(
+        "url_name,factory",
+        [("customer-list", CustomerFactory)]
+    )
     def test_list_returns_401(self, api_client, url_name, factory):
         factory()
         assert (
@@ -19,7 +22,10 @@ class TestUnauthenticatedAccess:
             == status.HTTP_401_UNAUTHORIZED
         )
 
-    @pytest.mark.parametrize("url_name,factory", [("customer-detail", CustomerFactory)])
+    @pytest.mark.parametrize(
+        "url_name,factory",
+        [("customer-detail", CustomerFactory)]
+    )
     def test_detail_returns_401(self, api_client, url_name, factory):
         obj = factory()
         url = reverse(url_name, kwargs={"pk": str(obj.id)})
@@ -32,7 +38,8 @@ class TestCustomerViewset:
     def test_list_returns_200(self, auth_client):
         CustomerFactory.create_batch(3)
         assert (
-            auth_client.get(reverse("customer-list")).status_code == status.HTTP_200_OK
+            auth_client.get(reverse("customer-list")).status_code
+            == status.HTTP_200_OK
         )
 
     def test_list_returns_all_customers(self, auth_client):
@@ -54,7 +61,8 @@ class TestCustomerViewset:
             "updated_at",
         }
 
-    # ------------------------------------------------------------------ pagination
+    # ------------------------------------------------------------------
+    # pagination
     def test_pagination_limit(self, auth_client):
         CustomerFactory.create_batch(10)
         response = auth_client.get(reverse("customer-list"), {"limit": 3})
@@ -65,17 +73,22 @@ class TestCustomerViewset:
         response_all = auth_client.get(reverse("customer-list"))
         all_ids = [r["id"] for r in response_all.data["results"]]
 
-        response_offset = auth_client.get(reverse("customer-list"), {"offset": 2})
+        response_offset = auth_client.get(
+            reverse("customer-list"), {"offset": 2}
+        )
         offset_ids = [r["id"] for r in response_offset.data["results"]]
         assert offset_ids == all_ids[2:]
 
-    # ------------------------------------------------------------------ filters
+    # ------------------------------------------------------------------
+    # filters
     def test_filter_by_name(self, auth_client):
         CustomerFactory(name="Alice Wonder")
         CustomerFactory(name="Bob Builder")
         response = auth_client.get(reverse("customer-list"), {"name": "alice"})
         assert response.data["count"] == 1
-        assert response.data["results"][0]["name"] == "Alice Wonder"
+        assert (
+            response.data["results"][0]["name"] == "Alice Wonder"
+        )
 
     def test_filter_by_email(self, auth_client):
         target = CustomerFactory(email="unique@example.com")
@@ -98,7 +111,9 @@ class TestCustomerViewset:
     def test_filter_by_address(self, auth_client):
         CustomerFactory(address="221B Baker Street")
         CustomerFactory(address="1600 Pennsylvania Ave")
-        response = auth_client.get(reverse("customer-list"), {"address": "baker"})
+        response = auth_client.get(
+            reverse("customer-list"), {"address": "baker"}
+        )
         assert response.data["count"] == 1
 
     # ------------------------------------------------------------------ detail
@@ -126,7 +141,9 @@ class TestCustomerViewset:
             "phone_number": "+1234567890",
             "address": "123 Test St",
         }
-        response = auth_client.post(reverse("customer-list"), payload, format="json")
+        response = auth_client.post(
+            reverse("customer-list"), payload, format="json"
+        )
         assert response.status_code == status.HTTP_201_CREATED
 
     def test_create_persists_to_db(self, auth_client):
@@ -147,7 +164,9 @@ class TestCustomerViewset:
             "phone_number": "+1234567890",
             "address": "No name here",
         }
-        response = auth_client.post(reverse("customer-list"), payload, format="json")
+        response = auth_client.post(
+            reverse("customer-list"), payload, format="json"
+        )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "name" in response.data
 
@@ -155,7 +174,9 @@ class TestCustomerViewset:
     def test_partial_update_returns_200(self, auth_client):
         customer = CustomerFactory()
         url = reverse("customer-detail", kwargs={"pk": str(customer.id)})
-        response = auth_client.patch(url, {"name": "Patched Name"}, format="json")
+        response = auth_client.patch(
+            url, {"name": "Patched Name"}, format="json"
+        )
         assert response.status_code == status.HTTP_200_OK
         assert response.data["name"] == "Patched Name"
 
@@ -176,7 +197,9 @@ class TestCustomerViewset:
     def test_delete_returns_204(self, auth_client):
         customer = CustomerFactory()
         url = reverse("customer-detail", kwargs={"pk": str(customer.id)})
-        assert auth_client.delete(url).status_code == status.HTTP_204_NO_CONTENT
+        assert (
+            auth_client.delete(url).status_code == status.HTTP_204_NO_CONTENT
+        )
 
     def test_delete_removes_from_db(self, auth_client):
         customer = CustomerFactory()
@@ -227,8 +250,12 @@ class TestSalesListView:
         assert resp.status_code == status.HTTP_200_OK
 
     def test_filter_min_total(self, auth_client, user, customer):
-        SalesFactory(user=user, customer=customer, total_amount=Decimal("50.00"))
-        SalesFactory(user=user, customer=customer, total_amount=Decimal("200.00"))
+        SalesFactory(
+            user=user, customer=customer, total_amount=Decimal("50.00")
+        )
+        SalesFactory(
+            user=user, customer=customer, total_amount=Decimal("200.00")
+        )
         resp = auth_client.get(self.url, {"min_total": "100"})
         assert resp.data["count"] == 1
 
@@ -243,13 +270,17 @@ class TestSalesCreateView:
         assert resp.data["payment_status"] == "pending"
         assert resp.data["invoice_number"].startswith("INV-")
 
-    def test_create_assigns_authenticated_user(self, auth_client, user, sale_payload):
+    def test_create_assigns_authenticated_user(
+        self, auth_client, user, sale_payload
+    ):
         resp = auth_client.post(self.url, sale_payload, format="json")
         assert resp.status_code == status.HTTP_201_CREATED
         sale = Sales.objects.get(id=resp.data["id"])
         assert sale.user == user
 
-    def test_create_completed_sale_deducts_stock(self, auth_client, customer, product):
+    def test_create_completed_sale_deducts_stock(
+        self, auth_client, customer, product
+    ):
         initial_stock = product.stock_quantity
         payload = {
             "customer": str(customer.id),
@@ -257,7 +288,11 @@ class TestSalesCreateView:
             "payment_status": "completed",
             "discount_amount": "0.00",
             "items": [
-                {"product": str(product.id), "quantity": 5, "discount_amount": "0.00"}
+                {
+                    "product": str(product.id),
+                    "quantity": 5,
+                    "discount_amount": "0.00"
+                }
             ],
         }
         resp = auth_client.post(self.url, payload, format="json")
@@ -304,14 +339,20 @@ class TestSalesCreateView:
 
 @pytest.mark.django_db
 class TestSalesUpdateView:
-    def test_update_pending_to_completed(self, auth_client, sale_with_item, product):
+    def test_update_pending_to_completed(
+        self, auth_client, sale_with_item, product
+    ):
         url = f"/api-sales/sales/{sale_with_item.id}/"
-        resp = auth_client.patch(url, {"payment_status": "completed"}, format="json")
+        resp = auth_client.patch(
+            url, {"payment_status": "completed"}, format="json"
+        )
         assert resp.status_code == status.HTTP_200_OK
         sale_with_item.refresh_from_db()
         assert sale_with_item.payment_status == "completed"
 
-    def test_update_completed_to_refunded(self, auth_client, user, customer, product):
+    def test_update_completed_to_refunded(
+        self, auth_client, user, customer, product
+    ):
         sale = SalesFactory(
             user=user,
             customer=customer,
@@ -330,24 +371,34 @@ class TestSalesUpdateView:
         product.save()
 
         url = f"/api-sales/sales/{sale.id}/"
-        resp = auth_client.patch(url, {"payment_status": "refunded"}, format="json")
+        resp = auth_client.patch(
+            url, {"payment_status": "refunded"}, format="json"
+        )
         assert resp.status_code == status.HTTP_200_OK
         sale.refresh_from_db()
         assert sale.payment_status == "refunded"
 
-    def test_update_completed_sale_notes_rejected(self, auth_client, completed_sale):
+    def test_update_completed_sale_notes_rejected(
+        self, auth_client, completed_sale
+    ):
         url = f"/api-sales/sales/{completed_sale.id}/"
-        resp = auth_client.patch(url, {"notes": "Should not work"}, format="json")
+        resp = auth_client.patch(
+            url, {"notes": "Should not work"}, format="json"
+        )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_update_refunded_sale_rejected(self, auth_client, refunded_sale):
         url = f"/api-sales/sales/{refunded_sale.id}/"
-        resp = auth_client.patch(url, {"payment_status": "pending"}, format="json")
+        resp = auth_client.patch(
+            url, {"payment_status": "pending"}, format="json"
+        )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_update_pending_sale_notes(self, auth_client, pending_sale):
         url = f"/api-sales/sales/{pending_sale.id}/"
-        resp = auth_client.patch(url, {"notes": "Updated notes"}, format="json")
+        resp = auth_client.patch(
+            url, {"notes": "Updated notes"}, format="json"
+        )
         assert resp.status_code == status.HTTP_200_OK
         pending_sale.refresh_from_db()
         assert pending_sale.notes == "Updated notes"
@@ -394,12 +445,15 @@ class TestDownloadInvoiceView:
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_download_invoice_nonexistent_sale(self, auth_client):
-        url = "/api-sales/sales/00000000-0000-0000-0000-000000000000/download-invoice/"
+        url = (
+            "/api-sales/sales/00000000-0000-0000-0000-000000000000/"
+            "download-invoice/"
+        )
         resp = auth_client.get(url)
         assert resp.status_code == status.HTTP_404_NOT_FOUND
 
 
-# ─── SalesItem ViewSet ────────────────────────────────────────────────────────
+# ─── SalesItem ViewSet
 
 
 @pytest.mark.django_db
@@ -422,6 +476,8 @@ class TestSalesItemView:
             assert str(item["sale"]) == str(sale_with_item.id)
 
     def test_filter_by_product(self, auth_client, sale_with_item, product):
-        resp = auth_client.get(self.url, {"product": str(product.id)})
+        resp = auth_client.get(
+            self.url, {"product": str(product.id)}
+        )
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["count"] >= 1

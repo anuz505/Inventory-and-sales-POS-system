@@ -1,6 +1,5 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import exceptions
-from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class CookieJWTAuthentication(JWTAuthentication):
